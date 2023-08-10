@@ -65,7 +65,7 @@ df_2 <- subset(test_df, condition == levels(as.factor(test_df$condition))[2])
 df_3 <- subset(test_df, condition == levels(as.factor(test_df$condition))[3])
 
 # select df subset
-subset_df <- df_3
+subset_df <- df_2
 
 plot(signal ~ AVP,
      subset_df,
@@ -92,6 +92,12 @@ DR.m_sub$coefficients[4]
 # --> df_3 much bnigger EC50 than df_1 or 2
 # two step selection? -> remove EC50 > X
 # -> see whether there are still curves which should be removed
+
+DR.m_sub$coefficients[1]
+# Hill by drm()
+# df_1 fit 0.9609228
+# df_2 fit 2.649798
+# df_3 fit 0.4734726
 
 # RMSE
 rmse(subset_df$signal, predict(DR.m_sub, newdata = test))
