@@ -31,7 +31,7 @@ rename_cols(test_table["b2AR_bArr1"])
 
 
 # Read the entire Excel workbook
-all_data = pd.read_excel(path_to_file + '/230913_overview_b2,b2V2,V2b2,V2_bArrs-confChange_prepR.xlsx',
+all_data = pd.read_excel(f"{path_to_file}/230913_overview_b2,b2V2,V2b2,V2_bArrs-confChange_prepR.xlsx",
                          sheet_name=None, nrows=7)
 # imported as dictionary where:
 #   Key: Sheet name
@@ -49,6 +49,8 @@ for sheet in all_data:
 data_SN = {key: value for key, value in all_data.items() if "SN" in key}
 data_OG = {key: value for key, value in all_data.items() if "SN" not in key}
 
+# Initialize a list to store temporary DataFrames
+temp_df_list = []
 
 # Initialize an empty DataFrame for the reformatted data
 reformatted_data = pd.DataFrame(columns=[
@@ -65,10 +67,16 @@ reformatted_data = pd.DataFrame(columns=[
 ID = 1  # Initialize ID counter
 
 # Iterate over each sheet in the data workbook
-for sheet_name, df in data_OG.items():
+for sheet_name, df in data_SN.items():
     print("################")
     print(sheet_name)
-    GPCR, bArr = sheet_name.split('_')  # Splitting sheet name into GPCR and bArr
+
+    # Splitting sheet name into GPCR and bArr; SN in sheet names is ignored
+    splitted_sheetName = sheet_name.split('_')
+    GPCR = splitted_sheetName[0]
+    bArr = splitted_sheetName[1]
+
+    first_col = df.iloc[:, 0] # Store the ligand data for reuse
 
     # Iterate over each column in the current sheet
     for col in df.columns[1:]:
@@ -78,8 +86,8 @@ for sheet_name, df in data_OG.items():
 
             # Create a DataFrame for the current column
             temp_df = pd.DataFrame({
-                'ligand': df.columns[0],
-                'ligand_conc': df[df.columns[0]],
+                'ligand': first_col.name[:-4],
+                'ligand_conc': first_col,
                 'condition': sheet_name,
                 'GPCR': GPCR,
                 'bArr': bArr,
@@ -95,6 +103,9 @@ for sheet_name, df in data_OG.items():
 
             ID += len(temp_df_filtered)  # Update ID counter
 
+            # Add the filtered DataFrame to the list
+            temp_df_list.append(temp_df_filtered)
+
             # Append to the reformatted_data DataFrame
             # print(temp_df_filtered)
 
@@ -102,12 +113,9 @@ for sheet_name, df in data_OG.items():
             # reformatted_data = reformatted_data.append(temp_df_filtered, ignore_index=True)
             reformatted_data = pd.concat([reformatted_data, temp_df_filtered], ignore_index=True)
 
+# concat list of temp dfs instead of appending in loop for better performance
+reformatted_data = pd.concat(temp_df_list, ignore_index=True)
+
 print(reformatted_data.head())
 
-reformatted_data.to_excel(path_to_file + "formatted_test.xlsx")
-
-# todo:
-# check if output is correct- done
-# run over workbook with all sheets
-# check if ouput is correct
-# -> move to R
+reformatted_data.to_excel(f"{path_to_file}formatted_test.xlsx")
