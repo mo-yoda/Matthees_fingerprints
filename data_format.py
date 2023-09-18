@@ -106,13 +106,6 @@ for sheet_name, df in data_SN.items():
             # Add the filtered DataFrame to the list
             temp_df_list.append(temp_df_filtered)
 
-            # Append to the reformatted_data DataFrame
-            # print(temp_df_filtered)
-
-            # append not available in pandas 2.0
-            # reformatted_data = reformatted_data.append(temp_df_filtered, ignore_index=True)
-            reformatted_data = pd.concat([reformatted_data, temp_df_filtered], ignore_index=True)
-
 # concat list of temp dfs instead of appending in loop for better performance
 reformatted_data = pd.concat(temp_df_list, ignore_index=True)
 
