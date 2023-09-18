@@ -21,10 +21,30 @@ def rename_cols(table):
     return table
 
 # path to test data
-path_to_file = "C:/Users/monar/Google Drive/Arbeit/homeoffice/230918_EM_PROGRAM/gpt/"
+path_to_file = "C:/Users/monar/Google Drive/Arbeit/homeoffice/230918_EM_PROGRAM/"
 
 # Read the first 7 rows of the CSV file
-data = pd.read_csv(path_to_file + "/test_b2adr.csv", nrows=7)
-print(data)
+# data = pd.read_csv(path_to_file + "gpt/test_b2adr.csv", nrows=7)
+# print(data)
 
-rename_cols(data)
+#rename_cols(data)
+
+# Read the entire Excel workbook
+data = pd.read_excel(path_to_file + '/230913_overview_b2,b2V2,V2b2,V2_bArrs-confChange_prepR.xlsx',
+                     sheet_name=None, nrows=7)
+# imported as dictionary where:
+#   Key: Sheet name
+#   Value: Data in that sheet as a DataFrame
+
+# Displaying sheet names to confirm successful reading
+sheet_names = list(data.keys())
+print(sheet_names)
+
+# apply renaming of cols for each table in dictionary
+for sheet in data:
+    rename_cols(data[sheet])
+
+print(data[sheet_names[5]])
+
+data[sheet_names[5]].to_excel(path_to_file + "output_test.xlsx")
+
