@@ -1,4 +1,5 @@
 import pandas as pd
+import re
 
 def rename_cols(table):
     # Create a new list for updated column names
@@ -30,25 +31,24 @@ rename_cols(test_table["b2AR_bArr1"])
 
 
 # Read the entire Excel workbook
-data = pd.read_excel(path_to_file + '/230913_overview_b2,b2V2,V2b2,V2_bArrs-confChange_prepR.xlsx',
-                     sheet_name=None, nrows=7)
+all_data = pd.read_excel(path_to_file + '/230913_overview_b2,b2V2,V2b2,V2_bArrs-confChange_prepR.xlsx',
+                         sheet_name=None, nrows=7)
 # imported as dictionary where:
 #   Key: Sheet name
 #   Value: Data in that sheet as a DataFrame
 
 # Displaying sheet names to confirm successful reading
-sheet_names = list(data.keys())
+sheet_names = list(all_data.keys())
 print(sheet_names)
 
 # apply renaming of cols for each table in dictionary
-for sheet in data:
-    rename_cols(data[sheet])
+for sheet in all_data:
+    rename_cols(all_data[sheet])
 
+# split dictionary for normalised and non-normalised data
+data_SN = {key: value for key, value in all_data.items() if "SN" in key}
+data_OG = {key: value for key, value in all_data.items() if "SN" not in key}
 
-# print(data[sheet_names[5]])
-# data[sheet_names[5]].to_excel(path_to_file + "output_test.xlsx")
-
-###
 
 # Initialize an empty DataFrame for the reformatted data
 reformatted_data = pd.DataFrame(columns=[
@@ -64,8 +64,8 @@ reformatted_data = pd.DataFrame(columns=[
     "ID"])
 ID = 1  # Initialize ID counter
 
-# Iterate over each sheet in the test_table workbook
-for sheet_name, df in test_table.items():
+# Iterate over each sheet in the data workbook
+for sheet_name, df in data_OG.items():
     print("################")
     print(sheet_name)
     GPCR, bArr = sheet_name.split('_')  # Splitting sheet name into GPCR and bArr
@@ -105,3 +105,9 @@ for sheet_name, df in test_table.items():
 print(reformatted_data.head())
 
 reformatted_data.to_excel(path_to_file + "formatted_test.xlsx")
+
+# todo:
+# check if output is correct- done
+# run over workbook with all sheets
+# check if ouput is correct
+# -> move to R
