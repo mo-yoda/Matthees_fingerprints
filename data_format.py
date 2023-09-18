@@ -1,6 +1,7 @@
 import pandas as pd
 import re
 
+# renaming columns according to condition + n
 def rename_cols(table):
     # Create a new list for updated column names
     corrected_columns = [table.columns[0]]
@@ -20,6 +21,70 @@ def rename_cols(table):
     print(table.columns[0:15])
 
     return table
+
+# reformat dictionary to one table
+def dic_to_table(dic):
+    # Initialize a list to store temporary DataFrames
+    temp_df_list = []
+
+    # Initialize an empty DataFrame for the reformatted data
+    reformatted_data = pd.DataFrame(columns=[
+        "ligand",
+        "ligand_conc",
+        "condition",
+        "GPCR",
+        "bArr",
+        "cell_background",
+        "FlAsH",
+        "n",
+        "signal",
+        "ID"])
+    ID = 1  # Initialize ID counter
+
+    # Iterate over each sheet in the data workbook
+    for sheet_name, df in dic.items():
+        print("################")
+        print(sheet_name)
+
+        # Splitting sheet name into GPCR and bArr; SN in sheet names is ignored
+        splitted_sheetName = sheet_name.split('_')
+        GPCR = splitted_sheetName[0]
+        bArr = splitted_sheetName[1]
+
+        first_col = df.iloc[:, 0]  # Store the ligand data for reuse
+
+        # Iterate over each column in the current sheet
+        for col in df.columns[1:]:
+            parts = col.split('_')
+            if len(parts) == 3:  # Making sure the column has 3 parts split by "_"
+                cell_background, FlAsH, n = parts
+
+                # Create a DataFrame for the current column
+                temp_df = pd.DataFrame({
+                    'ligand': first_col.name[:-4],
+                    'ligand_conc': first_col,
+                    'condition': sheet_name,
+                    'GPCR': GPCR,
+                    'bArr': bArr,
+                    'cell_background': cell_background,
+                    'FlAsH': FlAsH,
+                    'n': n,
+                    'signal': df[col],
+                    'ID': range(ID, ID + len(df))
+                })
+
+                # drop rows with missing Ns
+                temp_df_filtered = temp_df.dropna(subset=['signal'])
+
+                ID += len(temp_df_filtered)  # Update ID counter
+
+                # Add the filtered DataFrame to the list
+                temp_df_list.append(temp_df_filtered)
+
+    # concat list of temp dfs instead of appending in loop for better performance
+    reformatted_data = pd.concat(temp_df_list, ignore_index=True)
+
+    return reformatted_data
 
 # path to test data
 path_to_file = "C:/Users/monar/Google Drive/Arbeit/homeoffice/230918_EM_PROGRAM/"
@@ -49,66 +114,9 @@ for sheet in all_data:
 data_SN = {key: value for key, value in all_data.items() if "SN" in key}
 data_OG = {key: value for key, value in all_data.items() if "SN" not in key}
 
-# Initialize a list to store temporary DataFrames
-temp_df_list = []
+# use dic_to_table function to create result table containing all data
+results = [dic_to_table(data_OG), dic_to_table(data_SN)]
 
-# Initialize an empty DataFrame for the reformatted data
-reformatted_data = pd.DataFrame(columns=[
-    "ligand",
-    "ligand_conc",
-    "condition",
-    "GPCR",
-    "bArr",
-    "cell_background",
-    "FlAsH",
-    "n",
-    "signal",
-    "ID"])
-ID = 1  # Initialize ID counter
+results[0].to_excel(f"{path_to_file}Master_reformat.xlsx")
+results[1].to_excel(f"{path_to_file}Master_SN_reformat.xlsx")
 
-# Iterate over each sheet in the data workbook
-for sheet_name, df in data_SN.items():
-    print("################")
-    print(sheet_name)
-
-    # Splitting sheet name into GPCR and bArr; SN in sheet names is ignored
-    splitted_sheetName = sheet_name.split('_')
-    GPCR = splitted_sheetName[0]
-    bArr = splitted_sheetName[1]
-
-    first_col = df.iloc[:, 0] # Store the ligand data for reuse
-
-    # Iterate over each column in the current sheet
-    for col in df.columns[1:]:
-        parts = col.split('_')
-        if len(parts) == 3:  # Making sure the column has 3 parts split by "_"
-            cell_background, FlAsH, n = parts
-
-            # Create a DataFrame for the current column
-            temp_df = pd.DataFrame({
-                'ligand': first_col.name[:-4],
-                'ligand_conc': first_col,
-                'condition': sheet_name,
-                'GPCR': GPCR,
-                'bArr': bArr,
-                'cell_background': cell_background,
-                'FlAsH': FlAsH,
-                'n': n,
-                'signal': df[col],
-                'ID': range(ID, ID + len(df))
-            })
-
-            # drop rows with missing Ns
-            temp_df_filtered = temp_df.dropna(subset=['signal'])
-
-            ID += len(temp_df_filtered)  # Update ID counter
-
-            # Add the filtered DataFrame to the list
-            temp_df_list.append(temp_df_filtered)
-
-# concat list of temp dfs instead of appending in loop for better performance
-reformatted_data = pd.concat(temp_df_list, ignore_index=True)
-
-print(reformatted_data.head())
-
-reformatted_data.to_excel(f"{path_to_file}formatted_test.xlsx")
