@@ -115,8 +115,8 @@ data_SN = {key: value for key, value in all_data.items() if "SN" in key}
 data_OG = {key: value for key, value in all_data.items() if "SN" not in key}
 
 # use dic_to_table function to create result table containing all data
-results = [dic_to_table(data_OG), dic_to_table(data_SN)]
+results = {'OG': dic_to_table(data_OG), 'SN': dic_to_table(data_SN)}
 
-results[0].to_excel(f"{path_to_file}Master_reformat.xlsx")
-results[1].to_excel(f"{path_to_file}Master_SN_reformat.xlsx")
+results['OG'].to_excel(f"{path_to_file}Master_reformat.xlsx")
+results['SN'].to_excel(f"{path_to_file}Master_SN_reformat.xlsx")
 
