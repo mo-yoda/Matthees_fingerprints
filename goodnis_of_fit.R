@@ -176,9 +176,10 @@ data %>%
       fit_successful <- FALSE
       return(NULL)
     })
+    print(fit_attempt)
     print("after attempt#######")
     # Create the base plot
-    experiment = paste(.y$GPCR, .y$bArr, .y$cell_background, .y$FlAsH, sep = " - ")
+    experiment <- paste(.y$GPCR, .y$bArr, .y$cell_background, .y$FlAsH, sep = " - ")
     plot <- ggplot(curr_data, aes(x = ligand_conc, y = signal)) +
       geom_point(size = 2) +  # Plot the actual data points
       stat_summary(fun = mean, geom = "point", aes(group = 1), colour = "red", size = 4) +  # Plot mean of replicates
@@ -190,8 +191,18 @@ data %>%
     # If fit was successful, add the fit line to the plot
     if (fit_successful && !is.null(fit_attempt)) {
       print("FIT WAS SUCESS")
-      plot <- plot + labs(title = experiment)
-      # + geom_line(aes(y = predict(fit_attempt, newdata = curr_data)), color = "red") +
+      # Calculate x-values to predict y from
+      lig_range <- unique(curr_data$ligand_conc)
+
+      lig_predict <- data.frame(ligand_conc = seq(min(lig_range),
+                                                  max(lig_range),
+                                                  0.1))
+      lig_predict$predicted <- predict(fit_attempt, newdata = lig_predict)
+      print(names(lig_predict))
+
+      plot <- plot +
+        labs(title = experiment) +
+        geom_line(data = lig_predict, aes(x = ligand_conc, y = predicted), color = "red")
     } else {
       print("NO FIT")
       plot <- plot + labs(title = paste(experiment, "-- Fit could not be matched"))
@@ -217,5 +228,8 @@ data %>%
 
     # Display the plot (you can save it using ggsave if required)
     print(plot)
-  })
 
+    # Save the plot to a PNG file
+    ggsave(paste0(experiment, ".png"), plot = plot, width = 7, height = 5)
+  dev.off()
+  })
