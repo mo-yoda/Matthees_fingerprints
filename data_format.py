@@ -1,5 +1,4 @@
 import pandas as pd
-import re
 
 # renaming columns according to condition + n
 def rename_cols(table):
@@ -18,12 +17,12 @@ def rename_cols(table):
 
     # Update the dataframe with the corrected column names
     table.columns = corrected_columns
-    print(table.columns[0:15])
 
     return table
 
 # reformat dictionary to one table
 def dic_to_table(dic):
+    print("Reformatting...")
     # Initialize a list to store temporary DataFrames
     temp_df_list = []
 
@@ -43,7 +42,6 @@ def dic_to_table(dic):
 
     # Iterate over each sheet in the data workbook
     for sheet_name, df in dic.items():
-        print("################")
         print(sheet_name)
 
         # Splitting sheet name into GPCR and bArr; SN in sheet names is ignored
@@ -86,14 +84,8 @@ def dic_to_table(dic):
 
     return reformatted_data
 
-# path to test data
+# Path definition
 path_to_file = "C:/Users/monar/Google Drive/Arbeit/homeoffice/230918_EM_PROGRAM/"
-
-# Read the first 7 rows of the CSV file
-test_table = pd.read_excel(path_to_file + "gpt/test_b2adr.xlsx", sheet_name=None, nrows=7)
-print(test_table)
-rename_cols(test_table["b2AR_bArr1"])
-
 
 # Read the entire Excel workbook
 all_data = pd.read_excel(f"{path_to_file}/230913_overview_b2,b2V2,V2b2,V2_bArrs-confChange_prepR.xlsx",
@@ -104,6 +96,7 @@ all_data = pd.read_excel(f"{path_to_file}/230913_overview_b2,b2V2,V2b2,V2_bArrs-
 
 # Displaying sheet names to confirm successful reading
 sheet_names = list(all_data.keys())
+print("Imported workbook with following sheets:")
 print(sheet_names)
 
 # apply renaming of cols for each table in dictionary
