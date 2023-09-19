@@ -121,8 +121,6 @@ mae(subset_df$signal, predict(DR.m_sub, newdata = test))
 residuals(DR.m_sub)
 
 
-
-
 #### plan for now: ####
 # input -> folder, import all .xlsx (will be exports from prism
 # reformat as test_data for this script
@@ -154,37 +152,68 @@ data <- readxl::read_xlsx("Master_reformat.xlsx")
 data %>%
   group_by(GPCR, bArr, cell_background, FlAsH) %>%
   group_walk(~{
-      # Print out the current dataset factors
+    # Print out the current dataset factors
     cat("Plotting dataset with factors:\n")
     cat("GPCR:", .y$GPCR, "\n")
     cat("bArr:", .y$bArr, "\n")
     cat("cell_background:", .y$cell_background, "\n")
     cat("FlAsH:", .y$FlAsH, "\n\n")
+
     # Define the current dataset
     curr_data <- .x
 
-    # Fit the curve
-    fit <- drm(signal ~ ligand_conc,
-               data = curr_data,
-               # robust = 'mean',
-               logDose = 10, # as provided ligand conc are in log10
-               fct = LL.4()
-               )
-      print(fit)
-    print(curr_data)
-    print(nrow(curr_data))
-    #  print(predict(fit, newdata = curr_data))
-    # print(dim(predict(fit, newdata = curr_data)))
-
-    # Create the plot
+    # Try fitting the curve and catch errors
+    # (needed as, in the case that no fit can be calculated error message stops plotting)
+    fit_successful <- TRUE  # A flag to check if fit was successful
+    print("######before attempt")
+    fit_attempt <- tryCatch({
+      drm(signal ~ ligand_conc,
+          data = curr_data,
+          # robust = 'mean',
+          fct = LL.4(),
+          logDose = 10) # as provided ligand conc are in log10
+    }, error = function(e) {
+      fit_successful <- FALSE
+      return(NULL)
+    })
+    print("after attempt#######")
+    # Create the base plot
+    experiment = paste(.y$GPCR, .y$bArr, .y$cell_background, .y$FlAsH, sep = " - ")
     plot <- ggplot(curr_data, aes(x = ligand_conc, y = signal)) +
       geom_point(size = 2) +  # Plot the actual data points
-      # geom_line(aes(y = predict(fit, newdata = curr_data)), color = "red") +  # Add the fit line
       stat_summary(fun = mean, geom = "point", aes(group = 1), colour = "red", size = 4) +  # Plot mean of replicates
-      # scale_x_log10() +  # Log scale for x-axis
-      labs(title = paste(.y$GPCR, .y$bArr, .y$cell_background, .y$FlAsH, sep = " - "),
-           x = "Ligand Concentration", y = "Signal") +
+      labs(x = "Ligand Concentration", y = "Signal") +
       theme_minimal()
+
+    print("----------here----------")
+
+    # If fit was successful, add the fit line to the plot
+    if (fit_successful && !is.null(fit_attempt)) {
+      print("FIT WAS SUCESS")
+      plot <- plot + labs(title = experiment)
+      # + geom_line(aes(y = predict(fit_attempt, newdata = curr_data)), color = "red") +
+    } else {
+      print("NO FIT")
+      plot <- plot + labs(title = paste(experiment, "-- Fit could not be matched"))
+    }
+
+    # # Fit the curve
+    # fit <- drm(signal ~ ligand_conc,
+    #            data = curr_data,
+    #            # robust = 'mean',
+    #            logDose = 10, # as provided ligand conc are in log10
+    #            fct = LL.4()
+    # )
+
+    # # Create the plot
+    # plot <- ggplot(curr_data, aes(x = ligand_conc, y = signal)) +
+    #   geom_point(size = 2) +  # Plot the actual data points
+    #   # geom_line(aes(y = predict(fit, newdata = curr_data)), color = "red") +  # Add the fit line
+    #   stat_summary(fun = mean, geom = "point", aes(group = 1), colour = "red", size = 4) +  # Plot mean of replicates
+    #   # scale_x_log10() +  # Log scale for x-axis
+    #   labs(title = paste(.y$GPCR, .y$bArr, .y$cell_background, .y$FlAsH, sep = " - "),
+    #        x = "Ligand Concentration", y = "Signal") +
+    #   theme_minimal()
 
     # Display the plot (you can save it using ggsave if required)
     print(plot)
