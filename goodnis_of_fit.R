@@ -201,8 +201,10 @@ extract_fit_pars <- function(fit_attempt, experiment) {
 
 # Main function to process each grouped dataset
 process_dataset <- function(data) {
-  # Initialize df for gathered parameters
-  fit_pars <- data_frame()
+  # Initialize an empty list to store fit parameters
+  fit_pars_list <- list()
+
+  # fit_pars <- data_frame()
 
   data %>%
     group_by(GPCR, bArr, cell_background, FlAsH) %>%
@@ -226,9 +228,7 @@ process_dataset <- function(data) {
         plot <- create_base_plot(curr_data, experiment)
         plot <- add_fit_line(plot, fit_attempt, curr_data)
         temp_pars <- extract_fit_pars(fit_attempt, experiment)
-        fit_pars <- bind_rows(fit_pars, temp_pars)
-        print("fit pars df state:---")
-        print(fit_pars)
+        fit_pars_list <<- append(fit_pars_list, list(temp_pars))
       } else {
         print("NO FIT")
         plot <- create_base_plot(curr_data, paste(experiment, "-- Fit could not be matched"))
@@ -238,7 +238,7 @@ process_dataset <- function(data) {
       ggsave(paste0(experiment, ".png"), plot = plot, width = 7, height = 5)
       # dev.off()
     })
-
+  fit_pars <- bind_rows(fit_pars_list)
   return(fit_pars)
 }
 
@@ -250,7 +250,6 @@ data <- readxl::read_xlsx("Master_reformat.xlsx")
 
 # Call the main function
 fit_pars <- process_dataset(data)
-
 
 
 # # Initalize dataframe of fit parameters
