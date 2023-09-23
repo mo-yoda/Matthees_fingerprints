@@ -144,6 +144,7 @@ residuals(DR.m_sub)
 # Import necessary libraries
 library(tidyverse)
 library(drc)
+library(Metrics)
 
 # Function to fit the data
 fit_data <- function(curr_data) {
@@ -190,12 +191,22 @@ add_fit_line <- function(plot, fit_attempt, curr_data) {
                    color = "red")
 }
 
-# Function to extract fit parameters
-extract_fit_pars <- function(fit_attempt, experiment) {
+# Function to extract fit parameters and calculate RMSE and MAE
+extract_fit_pars <- function(fit_attempt, curr_data, experiment) {
+  # Get actual and prediced values
+  actual_values <- curr_data$signal
+  predicted_values <- predict(fit_attempt, newdata = data.frame(ligand_conc = curr_data$ligand_conc))
+
+  # Calculate RMSE and MAE
+  rmse_value <- rmse(actual_values, predicted_values)
+  mae_value <- mae(actual_values, predicted_values)
+
   data.frame(
     experiment = experiment,
     Hill_slope = fit_attempt$fit$par[1],
-    EC50 = fit_attempt$fit$par[4]
+    EC50 = fit_attempt$fit$par[4],
+    RMSE = rmse_value,
+    MAE = mae_value
   )
 }
 
@@ -227,7 +238,7 @@ process_dataset <- function(data) {
       if (!is.null(fit_attempt)) {
         plot <- create_base_plot(curr_data, experiment)
         plot <- add_fit_line(plot, fit_attempt, curr_data)
-        temp_pars <- extract_fit_pars(fit_attempt, experiment)
+        temp_pars <- extract_fit_pars(fit_attempt, curr_data, experiment)
         fit_pars_list <<- append(fit_pars_list, list(temp_pars))
       } else {
         print("NO FIT")
@@ -250,85 +261,3 @@ data <- readxl::read_xlsx("Master_reformat.xlsx")
 
 # Call the main function
 fit_pars <- process_dataset(data)
-
-
-# # Initalize dataframe of fit parameters
-# fit_pars <- data.frame(exp = c(NA),
-#                        hillslope = c(NA),
-#                        EC50 = c(NA))
-#
-# # Group data and create plots
-# data %>%
-#   group_by(GPCR, bArr, cell_background, FlAsH) %>%
-#   group_walk(~{
-#     # Print out the current dataset factors
-#     cat("Plotting dataset with factors:\n")
-#     cat("GPCR:", .y$GPCR, "\n")
-#     cat("bArr:", .y$bArr, "\n")
-#     cat("cell_background:", .y$cell_background, "\n")
-#     cat("FlAsH:", .y$FlAsH, "\n\n")
-#
-#     # Define the current dataset
-#     curr_data <- .x
-#
-#     # Try fitting the curve and catch errors
-#     # (needed as, in the case that no fit can be calculated error message stops plotting)
-#     fit_successful <- TRUE  # A flag to check if fit was successful
-#     print("######before attempt")
-#     fit_attempt <- tryCatch({
-#       drm(signal ~ ligand_conc,
-#           data = curr_data,
-#           logDose = 10, # as provided ligand conc are in log10
-#           robust = 'mean',
-#           na.action = 'na.omit',
-#           fct = LL.4(names = c("Hill slope", "Min", "Max", "EC50")))
-#     }, error = function(e) {
-#       return(NULL)
-#     })
-#     print(fit_attempt)
-#     print("after attempt#######")
-#     # Create the base plot
-#     experiment <- paste(.y$GPCR, .y$bArr, .y$cell_background, .y$FlAsH, sep = " - ")
-#     plot <- ggplot(curr_data, aes(x = ligand_conc, y = signal)) +
-#       geom_point(size = 2) +  # Plot the actual data points
-#       stat_summary(fun = mean, geom = "point", aes(group = 1), colour = "red", size = 4) +  # Plot mean of replicates
-#       labs(x = "Ligand Concentration", y = "Signal") +
-#       theme_minimal()
-#
-#     print("----------here----------")
-#
-#
-#     # If fit was successful, add the fit line to the plot
-#     if (fit_successful && !is.null(fit_attempt)) {
-#       print("FIT WAS SUCESS")
-#       # Calculate x-values to predict y from
-#       lig_range <- unique(curr_data$ligand_conc)
-#
-#       lig_predict <- data.frame(ligand_conc = seq(min(lig_range),
-#                                                   max(lig_range),
-#                                                   0.1))
-#       lig_predict$predicted <- predict(fit_attempt, newdata = lig_predict)
-#
-#       plot <- plot +
-#         labs(title = experiment) +
-#         geom_line(data = lig_predict, aes(x = ligand_conc, y = predicted), color = "red")
-#
-#       # fetch fit parameters
-#       temp_pars <- c(experiment, fit_attempt$fit$par[1], fit_attempt$fit$par[4])
-#       print(temp_pars)
-#       fit_pars <- rbind(fit_pars, temp_pars)
-#
-#     } else {
-#       print("NO FIT")
-#       plot <- plot + labs(title = paste(experiment, "-- Fit could not be matched"))
-#     }
-#
-#     # display plot in R
-#     # print(plot)
-#
-#     # Save the plot to a PNG file
-#     ggsave(paste0(experiment, ".png"), plot = plot, width = 7, height = 5)
-#     dev.off()
-#
-#     print(fit_pars)
-#   })
