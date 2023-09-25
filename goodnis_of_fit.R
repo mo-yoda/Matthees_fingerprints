@@ -129,27 +129,37 @@ fit_pars <- process_dataset(data)
 ### plot parameters
 
 # Function to extract outliers
-extract_outliers <- function(data, column_name) {
-  # Calculate the IQR
-  Q1 <- quantile(data[[column_name]], 0.25)
-  Q3 <- quantile(data[[column_name]], 0.75)
-  IQR <- Q3 - Q1
+extract_outliers <- function(data, column_name, use_log10 = FALSE) {
+  # Helper function to identify outliers
+  identify_outliers <- function(values) {
+    # Calculate the IQR using the possibly transformed values
+    Q1 <- quantile(values, 0.25)
+    Q3 <- quantile(values, 0.75)
+    IQR <- Q3 - Q1
 
-  # Define the lower and upper bounds for outliers
-  lower_bound <- Q1 - 1.5 * IQR
-  upper_bound <- Q3 + 1.5 * IQR
+    # Define the lower and upper bounds for outliers
+    lower_bound <- Q1 - 1.5 * IQR
+    upper_bound <- Q3 + 1.5 * IQR
 
-  print(paste("lower IQR is",lower_bound))
-  print(paste("upper IQR is",upper_bound))
+    print(paste("lower bound is", lower_bound))
+    print(paste("upper bound is", upper_bound))
+
+    # Identify outliers
+    outliers <- data[(values < lower_bound) | (values > upper_bound),]
+
+    # Select only the 'experiment' column
+    outlier_experiments <- outliers[["experiment"]]
+
+    return(outlier_experiments)
+  }
+
+  # Check the use_log10 flag and transform values if set to TRUE
+  values <- if (use_log10) log10(data[[column_name]]) else data[[column_name]]
 
   # Identify outliers
-  outliers <- data[(data[[column_name]] < lower_bound) |
-                     (data[[column_name]] > upper_bound),]
+  outliers <- identify_outliers(values)
 
-  # Get condition for which outlier was identified
-  outlier_experiments <- outliers[["experiment"]]
-
-  return(outlier_experiments)
+  return(outliers)
 }
 
 # Function to remove outliers from a specified data frame
@@ -158,36 +168,47 @@ remove_outliers <- function(data, outliers) {
   non_outlier_experiments <- setdiff(data$experiment, outliers)
 
   # Filter the data to keep only the non-outlier experiments
-  non_outlier_data <- data[data$experiment %in% non_outlier_experiments, ]
+  non_outlier_data <- data[data$experiment %in% non_outlier_experiments,]
 
   return(non_outlier_data)
 }
+
 # Hill Slope outliers
 outliers_HS <- extract_outliers(fit_pars, "Hill_slope")
-# IQR -3.255 and 5.432
+# bounds are -3.255 and 5.432
 # 33 outliers
 
 # RMSE outliers
 outliers_RMSE <- extract_outliers(fit_pars, "RMSE")
-# IQR -6.47 and 28.922
+# bounds are -6.47 and 28.922
 # 11 outliers
 
 # MAE outliers
 outliers_MAE <- extract_outliers(fit_pars, "MAE")
-# IQR -4.33 and 22.486
+# bounds are -4.33 and 22.486
 # 7 outliers
 
 # EC50 outliers have to be detected separately for each core
-b2_pars <- fit_pars[str_starts(fit_pars$experiment, "b2"), ]
-V2_pars <- fit_pars[str_starts(fit_pars$experiment, "V2"), ]
+b2_pars <- fit_pars[str_starts(fit_pars$experiment, "b2"),]
+V2_pars <- fit_pars[str_starts(fit_pars$experiment, "V2"),]
 
 outliers_b2EC50 <- extract_outliers(b2_pars, "EC50")
-# IQR -0.551 and 0.953
+# bounds are -0.551 and 0.953
 # 20 outliers
 
+# no repeat with log10 EC50
+outliers_logb2EC50 <- extract_outliers(b2_pars, "EC50", use_log10 = TRUE)
+# bounds are -4.117 and 1.812
+# 5 outliers
+
 outliers_V2EC50 <- extract_outliers(V2_pars, "EC50")
-# IQR -0.636 and 1.117
+# bounds are -0.636 and 1.117
 # 22 outliers
+
+# no repeat with log10 EC50
+outliers_logV2EC50 <- extract_outliers(V2_pars, "EC50", use_log10 = TRUE)
+# bounds are -3.675 and 1.66
+# 17 outliers
 
 # only 3 experiments which outliers in Hill_slop and EC50
 common_outliers_HS_EC50 <- intersect(outliers_HS, c(outliers_b2EC50, outliers_V2EC50))
@@ -217,14 +238,12 @@ add_outlier_columns <- function(fit_pars, outliers_list) {
 }
 
 # List of outlier experiments for each parameter
-outliers_list <- list(outliers_HS, c(outliers_V2EC50, outliers_b2EC50), outliers_RMSE, outliers_MAE)
-names(outliers_list) <- c("Hill_slope", "EC50", "RMSE", "MAE")
+outliers_list <- list(outliers_HS, c(outliers_V2EC50, outliers_b2EC50), c(outliers_V2EC50, outliers_logb2EC50), outliers_RMSE, outliers_MAE)
+names(outliers_list) <- c("Hill_slope", "EC50", "logEC50", "RMSE", "MAE")
 
 # Add "_outlier" columns to fit_pars
 fit_pars <- add_outlier_columns(fit_pars, outliers_list)
 write_xlsx(fit_pars, "Fit_parameters.xlsx")
-
-
 
 
 ###
