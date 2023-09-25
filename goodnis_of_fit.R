@@ -3,7 +3,8 @@ wants <- c("openxlsx",
            "drc", # needed for fit
            "dplyr",
            "Metrics", # needed for RMSE
-           "tidyverse"
+           "tidyverse",
+           "writexl"
 )
 
 has <- wants %in% rownames(installed.packages())
@@ -124,14 +125,89 @@ data <- readxl::read_xlsx("Master_reformat.xlsx")
 
 # Call the main function
 fit_pars <- process_dataset(data)
+write_xlsx(fit_pars, "Fit_parameters.xlsx")
 
+### plot parameters
+
+# Function to extract outliers
+extract_outliers <- function(data, column_name) {
+  # Calculate the IQR
+  Q1 <- quantile(data[[column_name]], 0.25)
+  Q3 <- quantile(data[[column_name]], 0.75)
+  IQR <- Q3 - Q1
+
+  # Define the lower and upper bounds for outliers
+  lower_bound <- Q1 - 1.5 * IQR
+  upper_bound <- Q3 + 1.5 * IQR
+
+  print(paste("lower IQR is",lower_bound))
+  print(paste("upper IQR is",upper_bound))
+
+  # Identify outliers
+  outliers <- data[(data[[column_name]] < lower_bound) |
+                     (data[[column_name]] > upper_bound),]
+
+  # Get condition for which outlier was identified
+  outlier_experiments <- outliers[["experiment"]]
+
+  return(outlier_experiments)
+}
+
+# Function to remove outliers from a specified data frame
+remove_outliers <- function(data, outliers) {
+  # Find the set difference between the 'experiment' values in the fir_par df and the outlier df
+  non_outlier_experiments <- setdiff(data$experiment, outliers)
+
+  # Filter the data to keep only the non-outlier experiments
+  non_outlier_data <- data[data$experiment %in% non_outlier_experiments, ]
+
+  return(non_outlier_data)
+}
+# Hill Slope outliers
+outliers_HS <- extract_outliers(fit_pars, "Hill_slope")
+# IQR -3.255 and 5.432
+# 33 outliers
+
+# RMSE outliers
+outliers_RMSE <- extract_outliers(fit_pars, "RMSE")
+# IQR -6.47 and 28.922
+# 11 outliers
+
+# MAE outliers
+outliers_MAE <- extract_outliers(fit_pars, "MAE")
+# IQR -4.33 and 22.486
+# 7 outliers
+
+# EC50 outliers have to be detected separately for each core
+b2_pars <- fit_pars[str_starts(fit_pars$experiment, "b2"), ]
+V2_pars <- fit_pars[str_starts(fit_pars$experiment, "V2"), ]
+
+outliers_b2EC50 <- extract_outliers(b2_pars, "EC50")
+# IQR -0.551 and 0.953
+# 20 outliers
+
+outliers_V2EC50 <- extract_outliers(V2_pars, "EC50")
+# IQR -0.636 and 1.117
+# 22 outliers
+
+# only 3 experiments which outliers in Hill_slop and EC50
+common_outliers_HS_EC50 <- intersect(outliers_HS, c(outliers_b2EC50, outliers_V2EC50))
+
+boxplot(fit_pars$Hill_slope)
+
+b2_no_outliers <- remove_outliers(b2_pars, outliers_b2EC50)
+V2_no_outliers <- remove_outliers(V2_pars, outliers_V2EC50)
+boxplot(b2_no_outliers$EC50)
+boxplot(V2_no_outliers$EC50)
+
+###
 boxplot(fit_pars[, -1])
 test <- fit_pars[-which.max(fit_pars$EC50),]
 boxplot(test[, -1])
 # very high EC50 values
 hist(fit_pars$EC50)
 less_EC50 <- fit_pars[which(fit_pars$EC50 < 10, fit_pars$EC50),]
-hist(less_EC50$EC50)
+hist(log(less_EC50$EC50))
 # !!! EC50 has to be compared for each ligand separately!!!
 boxplot(less_EC50$EC50)
 boxplot(fit_pars$Hill_slope)
