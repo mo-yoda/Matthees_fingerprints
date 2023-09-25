@@ -238,7 +238,11 @@ add_outlier_columns <- function(fit_pars, outliers_list) {
 }
 
 # List of outlier experiments for each parameter
-outliers_list <- list(outliers_HS, c(outliers_V2EC50, outliers_b2EC50), c(outliers_V2EC50, outliers_logb2EC50), outliers_RMSE, outliers_MAE)
+outliers_list <- list(outliers_HS,
+                      c(outliers_V2EC50, outliers_b2EC50),
+                      c(outliers_V2EC50, outliers_logb2EC50),
+                      outliers_RMSE,
+                      outliers_MAE)
 names(outliers_list) <- c("Hill_slope", "EC50", "logEC50", "RMSE", "MAE")
 
 # Add "_outlier" columns to fit_pars
