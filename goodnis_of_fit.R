@@ -125,7 +125,6 @@ data <- readxl::read_xlsx("Master_reformat.xlsx")
 
 # Call the main function
 fit_pars <- process_dataset(data)
-write_xlsx(fit_pars, "Fit_parameters.xlsx")
 
 ### plot parameters
 
@@ -199,6 +198,34 @@ b2_no_outliers <- remove_outliers(b2_pars, outliers_b2EC50)
 V2_no_outliers <- remove_outliers(V2_pars, outliers_V2EC50)
 boxplot(b2_no_outliers$EC50)
 boxplot(V2_no_outliers$EC50)
+
+# Function to add "_outlier" columns to fit_pars
+add_outlier_columns <- function(fit_pars, outliers_list) {
+
+  # Get parameter names from the names of the outliers_list
+  parameter_names <- names(outliers_list)
+
+  for (i in seq_along(outliers_list)) {
+    # Create the column name
+    column_name <- paste0(parameter_names[i], "_outlier")
+
+    # Check if each experiment is an outlier for the current parameter
+    fit_pars[[column_name]] <- fit_pars$experiment %in% outliers_list[[i]]
+  }
+
+  return(fit_pars)
+}
+
+# List of outlier experiments for each parameter
+outliers_list <- list(outliers_HS, c(outliers_V2EC50, outliers_b2EC50), outliers_RMSE, outliers_MAE)
+names(outliers_list) <- c("Hill_slope", "EC50", "RMSE", "MAE")
+
+# Add "_outlier" columns to fit_pars
+fit_pars <- add_outlier_columns(fit_pars, outliers_list)
+write_xlsx(fit_pars, "Fit_parameters.xlsx")
+
+
+
 
 ###
 boxplot(fit_pars[, -1])
