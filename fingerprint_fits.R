@@ -110,6 +110,13 @@ process_dataset <- function(data) {
         # Create the base plot without fit line
         plot <- create_base_plot(curr_data, paste(experiment, "-- Fit could not be matched"))
       }
+      # Full path to the PNG file
+      file_path <- paste0(getwd(), "/", experiment, ".png")
+
+      # Check if file exists, if so delete it
+      if (file.exists(file_path)) {
+        file.remove(file_path)
+      }
 
       # Save the plot to a PNG file
       ggsave(paste0(experiment, ".png"), plot = plot, width = 7, height = 5)
