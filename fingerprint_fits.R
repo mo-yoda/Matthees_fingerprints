@@ -80,8 +80,7 @@ extract_fit_pars <- function(fit_attempt, curr_data, experiment) {
 process_dataset <- function(data) {
   # Initialize an empty list to store fit parameters
   fit_pars_list <- list()
-
-  # fit_pars <- data_frame()
+  unsuccessful_fit_experiments <- list()
 
   data %>%
     group_by(GPCR, bArr, cell_background, FlAsH) %>%
@@ -106,7 +105,9 @@ process_dataset <- function(data) {
         temp_pars <- extract_fit_pars(fit_attempt, curr_data, experiment)
         fit_pars_list <<- append(fit_pars_list, list(temp_pars))
       } else {
-        print("NO FIT")
+        # Add experiment name to the list of unsuccessful fit experiments
+        unsuccessful_fit_experiments <<- append(unsuccessful_fit_experiments, experiment)
+        # Create the base plot without fit line
         plot <- create_base_plot(curr_data, paste(experiment, "-- Fit could not be matched"))
       }
 
@@ -114,6 +115,12 @@ process_dataset <- function(data) {
       ggsave(paste0(experiment, ".png"), plot = plot, width = 7, height = 5)
       # dev.off()
     })
+    # Convert list of unsuccessful fit experiments to a data frame
+  unsuccessful_fit_df <- data.frame(experiment = unlist(unsuccessful_fit_experiments))
+
+  # Save the list of unsuccessful fit experiments to an Excel file
+  write_xlsx(unsuccessful_fit_df, "unsuccessful_fit_experiments.xlsx")
+
   fit_pars <- bind_rows(fit_pars_list)
   return(fit_pars)
 }
@@ -210,9 +217,6 @@ outliers_V2EC50 <- extract_outliers(V2_pars, "EC50")
 outliers_logV2EC50 <- extract_outliers(V2_pars, "EC50", use_log10 = TRUE)
 # bounds are -3.675 and 1.66
 # 17 outliers
-
-# only 3 experiments which outliers in Hill_slop and EC50
-common_outliers_HS_EC50 <- intersect(outliers_HS, c(outliers_b2EC50, outliers_V2EC50))
 
 boxplot(fit_pars$Hill_slope)
 
