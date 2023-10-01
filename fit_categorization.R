@@ -62,51 +62,15 @@ classes <- classes %>%
     unclear = str_detect(`conc_dep`, "p")
   )
 
-
 # Merge the fit_pars and classes dfs based on the matching factors
 merged_data <- fit_pars %>%
-  left_join(classes, by = c("GPCR", "bArr", "cell_background", "FlAsH"))
-
-# # Create the "unclear" column based on the presence of "p" in the original "conc-dep" column
-# merged_data <- merged_data %>%
-#   mutate(
-#     unclear = str_detect(`conc_dep`, "p")
-#   )
+  left_join(subset(classes, select = -fit), by = c("GPCR", "bArr", "cell_background", "FlAsH"))
 
 # Apply the function to specified columns
 merged_data <- merged_data %>%
   mutate(
-    fit = translate_to_logical(fit),
     outliers_large_spread = translate_to_logical(outliers_large_spread),
     conc_dep = translate_to_logical(conc_dep),
     critical = translate_to_logical(critical)
   )
 
-###
-# Load necessary library
-library(dplyr)
-
-# Find rows present in fit_pars but not in classes
-missing_in_classes <- anti_join(fit_pars, classes,
-                                by = c("GPCR", "bArr", "cell_background", "FlAsH"))
-
-# Find rows present in classes but not in fit_pars
-missing_in_fit_pars <- anti_join(classes, fit_pars,
-                                 by = c("GPCR", "bArr", "cell_background", "FlAsH"))
-
-# Print the missing rows
-if (nrow(missing_in_classes) > 0) {
-  print("Rows present in fit_pars but not in classes:")
-  print(missing_in_classes)
-  x <- missing_in_classes
-}
-
-if (nrow(missing_in_fit_pars) > 0) {
-  print("Rows present in classes but not in fit_pars:")
-  print(missing_in_fit_pars)
-}
-
-# If no missing rows, print a success message
-if (nrow(missing_in_classes) == 0 && nrow(missing_in_fit_pars) == 0) {
-  print("All rows match between the two data frames.")
-}
