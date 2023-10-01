@@ -1,4 +1,4 @@
-# create needed environment with loading packages
+### create needed environment with loading packages
 wants <- c("openxlsx",
            "drc", # needed for fit
            "dplyr",
@@ -11,6 +11,7 @@ has <- wants %in% rownames(installed.packages())
 if (any(!has)) install.packages(wants[!has])
 lapply(wants, require, character.only = TRUE)
 
+### Functions to create all fit plots
 # Function to fit the data
 fit_data <- function(curr_data) {
   # Try fitting the curve and catch errors
@@ -117,7 +118,7 @@ process_dataset <- function(data) {
   return(fit_pars)
 }
 
-
+### Data processing
 setwd(r"(C:\Users\monar\Google Drive\Arbeit\homeoffice\230918_EM_PROGRAM)")
 
 # Load data
@@ -126,7 +127,7 @@ data <- readxl::read_xlsx("Master_reformat.xlsx")
 # Call the main function
 fit_pars <- process_dataset(data)
 
-### plot parameters
+### Fit parameter analysis
 
 # Function to extract outliers
 extract_outliers <- function(data, column_name, use_log10 = FALSE) {
@@ -162,7 +163,7 @@ extract_outliers <- function(data, column_name, use_log10 = FALSE) {
   return(outliers)
 }
 
-# Function to remove outliers from a specified data frame
+# Function to remove outliers from a specified data frame; to see data ditribution without outliers
 remove_outliers <- function(data, outliers) {
   # Find the set difference between the 'experiment' values in the fir_par df and the outlier df
   non_outlier_experiments <- setdiff(data$experiment, outliers)
@@ -220,7 +221,7 @@ V2_no_outliers <- remove_outliers(V2_pars, outliers_V2EC50)
 boxplot(b2_no_outliers$EC50)
 boxplot(V2_no_outliers$EC50)
 
-# Function to add "_outlier" columns to fit_pars
+# Function to add logical "_outlier" columns to fit_pars
 add_outlier_columns <- function(fit_pars, outliers_list) {
 
   # Get parameter names from the names of the outliers_list
@@ -251,18 +252,5 @@ write_xlsx(fit_pars, "Fit_parameters.xlsx")
 
 
 ###
-boxplot(fit_pars[, -1])
-test <- fit_pars[-which.max(fit_pars$EC50),]
-boxplot(test[, -1])
-# very high EC50 values
-hist(fit_pars$EC50)
-less_EC50 <- fit_pars[which(fit_pars$EC50 < 10, fit_pars$EC50),]
-hist(log(less_EC50$EC50))
-# !!! EC50 has to be compared for each ligand separately!!!
-boxplot(less_EC50$EC50)
-boxplot(fit_pars$Hill_slope)
-boxplot(fit_pars$RMSE)
-boxplot(fit_pars$MAE)
-
 # consider getting residuals from fit
 residuals(model)
