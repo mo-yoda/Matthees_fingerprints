@@ -282,13 +282,74 @@ add_plot(plot_list,
          "concDep_mae")
 
 ### 2D plotting
+create_xy_plot <- function(data, x_col, y_col, factor1 = NULL, factor2 = NULL,
+                           x_range = NULL, y_range = NULL, log_x = FALSE, log_y = FALSE) {
+  # Convert column names to symbols
+  x_col <- sym(x_col)
+  y_col <- sym(y_col)
+  factor1 <- sym(factor1)
+  factor2 <- sym(factor2)
 
+  # Create ggplot
+  p <- ggplot(data, aes(x = !!x_col, y = !!y_col))
 
+  # Add points with color aesthetics based on factors
+  if (!is.null(factor1) && !is.null(factor2)) {
+    p <- p + geom_point(aes(color = interaction(!!factor1, !!factor2)))
+  } else if (!is.null(factor1)) {
+    p <- p + geom_point(aes(color = !!factor1))
+  } else {
+    p <- p + geom_point()
+  }
+
+  # Apply log10 transformation if specified, and set axes ranges if provided
+  if (log_x) {
+    p <- p + scale_x_log10(limits = x_range)
+  } else if (!is.null(x_range)) {
+    p <- p + lims(x = x_range)
+  }
+
+  if (log_y) {
+    p <- p + scale_y_log10(limits = y_range)
+  } else if (!is.null(y_range)) {
+    p <- p + lims(y = y_range)
+  }
+
+  # Enhance plot
+  p <- p +
+    theme_minimal(base_size = 15) +  # Increase base font size
+    labs(
+      title = paste("Scatter plot of", quo_name(x_col), "versus", quo_name(y_col)),
+      x = quo_name(x_col),
+      y = quo_name(y_col)
+    )
+
+  # Return the plot
+  return(p)
+}
+
+# Usage:
+xy_plot <- create_xy_plot(merged_data,
+                          "EC50", "Hill_slope",
+                          "conc_dep", "critical",
+                          x_range = c(0, 3))
+xy_plot <- create_xy_plot(merged_data,
+                          "EC50", "Hill_slope",
+                          "conc_dep", "critical",
+                          x_range = c(-5, 300),
+                          log_x = TRUE)
+xy_plot <- create_xy_plot(merged_data,
+                          "EC50", "Hill_slope",
+                          "conc_dep", "critical",
+                          x_range = c(-5, 300),
+                          log_x = TRUE,
+                          log_y = TRUE)
+xy_plot
 
 
 # export created plots
 setwd(paste0(path, r"(\categories\)"))
-for(i in seq_along(plot_list)) {
+for (i in seq_along(plot_list)) {
   # file name based on the plot name
   file_name <- paste0(names(plot_list)[i], ".png")
   # Save the plot to a file
