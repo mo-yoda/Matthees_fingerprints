@@ -77,11 +77,12 @@ merged_data <- merged_data %>%
 
 ### plot parameters based on different factors
 
+# function for plotting
 create_boxplot <- function(data, plot_col,
                            factor1, factor2 = NULL,
                            ylim_range = c(0, 4), log_transform = FALSE) {
   # Convert column names to symbols
-  plot_col <- sym(plot_col)
+  plot_col_sym <- sym(plot_col)
   factor1 <- sym(factor1)
 
   # Convert factor2 to symbol if it is not NULL
@@ -89,41 +90,28 @@ create_boxplot <- function(data, plot_col,
     factor2 <- sym(factor2)
   }
 
-   # Log transform the plot column if log_transform is TRUE
+  # Log transform the plot column if log_transform is TRUE
   if (log_transform) {
-    data <- data %>% mutate(!!plot_col := log10(!!plot_col))
+    data <- data %>% mutate(!!plot_col_sym := log10(!!plot_col_sym))
   }
 
-  # To separately label outliers
-    # Get the stats for the boxplot to identify outliers
-  box_stats <- boxplot.stats(data[[as.character(plot_col)]])
-
-  # Filter the data to only include the outliers
-  outlier_data <- data %>% filter(!!plot_col %in% box_stats$out)
+  # Create a grouping variable
+  data <- data %>%
+    mutate(group_var = interaction(!!factor1, !!factor2, lex.order = TRUE))
 
   # Create boxplot
-  p <- ggplot(data, aes(x = interaction(!!factor1, !!factor2, lex.order = TRUE), y = !!plot_col)) +
+  p <- ggplot(data, aes(x = group_var, y = !!plot_col_sym)) +
     geom_boxplot() +
-    geom_text(
-      aes(label = paste(GPCR, bArr, cell_background, FlAsH, sep = ", ")),
-      data = outlier_data,
-      vjust = 1.5,
-      size = 3,
-      check_overlap = TRUE
-    ) +
     labs(
       title = paste("Boxplots of", ifelse(log_transform, paste0("log10(", plot_col, ")"), plot_col),
                     "for GPCR with", paste(unique(data$GPCR), collapse = " ")),
       x = paste("Groups (", factor1, if (!is.null(factor2)) paste0(" and ", factor2), ")"),
-    )  +
-    ylim(ylim_range)  # Set y-axis limit based on the ylim_range input
-    # adjust font size
+    ) +
+    ylim(ylim_range) +  # Set y-axis limit based on the ylim_range input
     theme(
       axis.title = element_text(size = 14),
       axis.text = element_text(size = 14)
-    ) # +
-    # geom_text(aes(label = paste0(plot_col, "_outlier"), hjust = -.5))
-
+    )
 
   # Return the plot
   return(p)
@@ -136,14 +124,54 @@ data_V2 <- merged_data %>%
 data_b2 <- merged_data %>%
   filter(str_starts(GPCR, "b2"))
 
-# Usage
+### Boxplot plotting
 # Warning: Removed XX rows containing non-finite values (`stat_boxplot()`)
 # -> due to ylim setting!, there are no NAs or Inf values in this dataset
-plot_V2 <- create_boxplot(data_V2, "EC50", "conc_dep", "unclear")
-plot_b2 <- create_boxplot(data_b2, "EC50", "conc_dep", "unclear")
-hillSlope <- create_boxplot(merged_data, "Hill_slope", "conc_dep", "unclear")
-rmse <- create_boxplot(merged_data, "RMSE", "conc_dep", "unclear")
-mae <- create_boxplot(merged_data, "MAE", "conc_dep", "unclear")
+
+### conc_dep + unclear factors
+# EC50
+boxplot_V2 <- create_boxplot(
+  data_V2, "EC50", "conc_dep", "unclear", ylim_range = c(-0.5, 3))
+# 16x values not displayed as EC50 > 3; all in conc_dep = FALSE
+boxplot_b2_A <- create_boxplot(
+  data_b2, "EC50", "conc_dep", "unclear", ylim_range = c(-0.5, 10))
+# 8x values not displayed as EC50 > 10; all in conc_dep = FALSE
+boxplot_b2_B <- create_boxplot(
+  data_b2, "EC50", "conc_dep", "unclear", ylim_range = c(-0.5, 3))
+# 14x values not displayed as EC50 > 3; in all different groups!
+
+# EC50 log transformed
+boxplot_V2_log <- create_boxplot(data_V2, "EC50", "conc_dep", "unclear",
+                                 ylim_range = c(-7, 10), log_transform = TRUE)
+# 3x values not displayed as log10(EC50) > 10; all in conc_dep = FALSE
+boxplot_b2_log <- create_boxplot(data_b2, "EC50", "conc_dep", "unclear",
+                                 ylim_range = c(-5, 5), log_transform = TRUE)
+# all values displayed
+
+# remaining parameters
+hillSlope <- create_boxplot(
+  merged_data, "Hill_slope", "conc_dep", "unclear", ylim_range = c(-11, 13))
+rmse <- create_boxplot(
+  merged_data, "RMSE", "conc_dep", "unclear", ylim_range = c(0, 65))
+mae <- create_boxplot(
+  merged_data, "MAE", "conc_dep", "unclear", ylim_range = c(0, 60))
+
+### conc_dep + critical
+# EC50
+boxplot_V2_crit <- create_boxplot(
+  data_V2, "EC50", "conc_dep", "critical", ylim_range = c(-0.5, 3))
+# 16x values not displayed as EC50 > 3; all in conc_dep = FALSE
+boxplot_b2_crit <- create_boxplot(
+  data_b2, "EC50", "conc_dep", "critical", ylim_range = c(-0.5, 10))
+# 8x values not displayed as EC50 > 10; all in conc_dep = FALSE
+
+# EC50 log transformed
+boxplot_V2_crit_log <- create_boxplot(data_V2, "EC50", "conc_dep", "critical",
+                                 ylim_range = c(-7, 10), log_transform = TRUE)
+# 3x values not displayed as log10(EC50) > 10; all in conc_dep = FALSE
+boxplot_b2_crit_log <- create_boxplot(data_b2, "EC50", "conc_dep", "critical",
+                                 ylim_range = c(-5, 5), log_transform = TRUE)
+# all values displayed
 
 
 
@@ -152,3 +180,9 @@ mae <- create_boxplot(merged_data, "MAE", "conc_dep", "unclear")
 plot_V2_single_factor <- create_boxplot(data_V2, "EC50", "conc_dep")
 plot_b2_single_factor <- create_boxplot(data_b2, "EC50", "conc_dep")
 
+
+# single factor plotting: conc_dep
+
+
+
+## 2D plotting, coloring different groups
