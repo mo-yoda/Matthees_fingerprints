@@ -34,7 +34,7 @@ translate_to_logical <- function(column) {
   )
 }
 
-
+### data processing
 path <- r"(C:\Users\monar\Google Drive\Arbeit\homeoffice\230918_EM_PROGRAM)"
 setwd(path)
 
@@ -76,7 +76,6 @@ merged_data <- merged_data %>%
   )
 
 ### plot parameters based on different factors
-
 # function for plotting
 create_boxplot <- function(data, plot_col,
                            factor1, factor2 = NULL,
@@ -120,6 +119,13 @@ create_boxplot <- function(data, plot_col,
   return(p)
 }
 
+# function to save plots in list with name
+add_plot <- function(plot_list, new_plot, plot_name) {
+  # Combine the existing list with the new plot
+  plot_list <<- c(plot_list, setNames(list(new_plot), plot_name))
+  return(plot_list)
+}
+
 # Separation for EC50 based on the starting string of GPCR
 data_V2 <- merged_data %>%
   filter(str_starts(GPCR, "V2"))
@@ -127,85 +133,111 @@ data_V2 <- merged_data %>%
 data_b2 <- merged_data %>%
   filter(str_starts(GPCR, "b2"))
 
+# initialize plot_list
+plot_list <- list()
+
 ### Boxplot plotting
 # Warning: Removed XX rows containing non-finite values (`stat_boxplot()`)
 # -> due to ylim setting!, there are no NAs or Inf values in this dataset
 
 ### conc_dep + unclear factors
 # EC50
-boxplot_V2 <- create_boxplot(
-  data_V2, "EC50", "conc_dep", "unclear", ylim_range = c(-0.5, 3))
+add_plot(plot_list,
+         create_boxplot(data_V2, "EC50",
+                        "conc_dep", "unclear",
+                        ylim_range = c(-0.5, 3)),
+         "concDep_uncl_V2")
 # 16x values not displayed as EC50 > 3; all in conc_dep = FALSE
-boxplot_b2_A <- create_boxplot(
-  data_b2, "EC50", "conc_dep", "unclear", ylim_range = c(-0.5, 10))
+add_plot(plot_list,
+         create_boxplot(data_b2, "EC50",
+                        "conc_dep", "unclear",
+                        ylim_range = c(-0.5, 10)),
+         "concDep_uncl_b2_A")
 # 8x values not displayed as EC50 > 10; all in conc_dep = FALSE
-boxplot_b2_B <- create_boxplot(
-  data_b2, "EC50", "conc_dep", "unclear", ylim_range = c(-0.5, 3))
+add_plot(plot_list,
+         create_boxplot(data_b2, "EC50",
+                        "conc_dep", "unclear",
+                        ylim_range = c(-0.5, 3)),
+         "concDep_uncl_b2_B")
 # 14x values not displayed as EC50 > 3; in all different groups!
 
 # EC50 log transformed
-boxplot_V2_log <- create_boxplot(data_V2, "EC50", "conc_dep", "unclear",
-                                 ylim_range = c(-7, 10), log_transform = TRUE)
+add_plot(plot_list,
+         create_boxplot(data_V2, "EC50",
+                        "conc_dep", "unclear",
+                        ylim_range = c(-7, 10), log_transform = TRUE),
+         "concDep_uncl_V2_log")
 # 3x values not displayed as log10(EC50) > 10; all in conc_dep = FALSE
-boxplot_b2_log <- create_boxplot(data_b2, "EC50", "conc_dep", "unclear",
-                                 ylim_range = c(-5, 5), log_transform = TRUE)
+add_plot(plot_list,
+         create_boxplot(data_b2, "EC50",
+                        "conc_dep", "unclear",
+                        ylim_range = c(-5, 5), log_transform = TRUE),
+         "concDep_uncl_b2_log")
 # all values displayed
 
 # remaining parameters
-hillSlope <- create_boxplot(
-  merged_data, "Hill_slope", "conc_dep", "unclear", ylim_range = c(-11, 13))
-rmse <- create_boxplot(
-  merged_data, "RMSE", "conc_dep", "unclear", ylim_range = c(0, 65))
-mae <- create_boxplot(
-  merged_data, "MAE", "conc_dep", "unclear", ylim_range = c(0, 55))
+add_plot(plot_list,
+         create_boxplot(merged_data, "Hill_slope",
+                        "conc_dep", "unclear",
+                        ylim_range = c(-11, 13)),
+         "concDep_uncl_hillSlope")
+add_plot(plot_list,
+         create_boxplot(merged_data, "RMSE",
+                        "conc_dep", "unclear",
+                        ylim_range = c(0, 65)),
+         "concDep_uncl_rmse")
+add_plot(plot_list,
+         create_boxplot(merged_data, "MAE",
+                        "conc_dep", "unclear",
+                        ylim_range = c(0, 55)),
+         "concDep_uncl_mae")
 
 ### conc_dep + critical
 # EC50
-boxplot_V2_crit <- create_boxplot(
+concDep_crit_V2 <- create_boxplot(
   data_V2, "EC50", "conc_dep", "critical", ylim_range = c(-0.5, 3))
 # 16x values not displayed as EC50 > 3; all in conc_dep = FALSE
-boxplot_b2_crit <- create_boxplot(
+concDep_crit_b2 <- create_boxplot(
   data_b2, "EC50", "conc_dep", "critical", ylim_range = c(-0.5, 10))
 # 8x values not displayed as EC50 > 10; all in conc_dep = FALSE
 
 # EC50 log transformed
-boxplot_V2_crit_log <- create_boxplot(data_V2, "EC50", "conc_dep", "critical",
+concDep_crit_V2_log <- create_boxplot(data_V2, "EC50", "conc_dep", "critical",
                                       ylim_range = c(-7, 10), log_transform = TRUE)
 # 3x values not displayed as log10(EC50) > 10; all in conc_dep = FALSE
-boxplot_b2_crit_log <- create_boxplot(data_b2, "EC50", "conc_dep", "critical",
+concDep_crit_b2_log <- create_boxplot(data_b2, "EC50", "conc_dep", "critical",
                                       ylim_range = c(-5, 5), log_transform = TRUE)
 # all values displayed
 
 # remaining parameters
-hillSlope_crit <- create_boxplot(
+concDep_crit_hillSlope <- create_boxplot(
   merged_data, "Hill_slope", "conc_dep", "critical", ylim_range = c(-11, 13))
-rmse_crit <- create_boxplot(
+concDep_crit_rmse <- create_boxplot(
   merged_data, "RMSE", "conc_dep", "critical", ylim_range = c(0, 65))
-mae_crit <- create_boxplot(
+concDep_crit_mae <- create_boxplot(
   merged_data, "MAE", "conc_dep", "critical", ylim_range = c(0, 55))
 
 
 ### conc_dep single factor
 # EC50
-boxplot_V2_concDep <- create_boxplot(data_V2, "EC50", "conc_dep",
-                                     ylim_range = c(-0.5, 3))
-boxplot_b2_concDep <- create_boxplot(data_b2, "EC50", "conc_dep",
-                                     ylim_range = c(-0.5, 10))
+concDep_V2 <- create_boxplot(data_V2, "EC50", "conc_dep",
+                             ylim_range = c(-0.5, 3))
+concDep_b2 <- create_boxplot(data_b2, "EC50", "conc_dep",
+                             ylim_range = c(-0.5, 10))
 
 # EC50 log transformed
-boxplot_V2_concDep_log <- create_boxplot(data_V2, "EC50", "conc_dep",
-                                      ylim_range = c(-7, 10), log_transform = TRUE)
-boxplot_b2_concDep_log <- create_boxplot(data_b2, "EC50", "conc_dep",
-                                      ylim_range = c(-5, 5), log_transform = TRUE)
+concDep_V2_log <- create_boxplot(data_V2, "EC50", "conc_dep",
+                                 ylim_range = c(-7, 10), log_transform = TRUE)
+concDep_b2_log <- create_boxplot(data_b2, "EC50", "conc_dep",
+                                 ylim_range = c(-5, 5), log_transform = TRUE)
 
 # remaining parameters
-hillSlope_concDep <- create_boxplot(merged_data, "Hill_slope",
-                                 "conc_dep", ylim_range = c(-11, 13))
-rmse_concDep <- create_boxplot(merged_data, "RMSE",
-                            "conc_dep", ylim_range = c(0, 65))
-mae_concDep <- create_boxplot(merged_data, "MAE",
-                           "conc_dep", ylim_range = c(0, 55))
+concDep_hillSlope <- create_boxplot(merged_data, "Hill_slope",
+                                    "conc_dep", ylim_range = c(-11, 13))
+concDep_rmse <- create_boxplot(merged_data, "RMSE",
+                               "conc_dep", ylim_range = c(0, 65))
+concDep_mae <- create_boxplot(merged_data, "MAE",
+                              "conc_dep", ylim_range = c(0, 55))
 
+### 2D plotting
 
-
-## 2D plotting, coloring different groups
