@@ -105,7 +105,7 @@ create_boxplot <- function(data, plot_col,
   # Create boxplot
   p <- ggplot(data, aes(x = group_var, y = !!plot_col_sym)) +
     geom_boxplot() +
-    geom_jitter(width = 0.2, size = 2, alpha = 0.6) +  # Add jittered points
+    geom_jitter(aes(color = "#ff460b"), width = 0.2, size = 2, alpha = 0.6, show.legend = FALSE) +  # Add jittered points
     labs(
       title = paste("Boxplots of", ifelse(log_transform, paste0("log10(", plot_col, ")"), plot_col),
                     "for GPCR with", paste(unique(data$GPCR), collapse = " ")),
@@ -135,6 +135,13 @@ data_V2 <- merged_data %>%
 data_b2 <- merged_data %>%
   filter(str_starts(GPCR, "b2"))
 
+# test Separation based on Cterm
+data_V2Cterm <- merged_data %>%
+    filter(str_detect(GPCR, "b2V2") | str_detect(GPCR, "V2R"))
+
+data_b2Cterm <- merged_data %>%
+    filter(str_detect(GPCR, "b2AR") | str_detect(GPCR, "V2b2"))
+
 # initialize plot_list
 plot_list <- list()
 
@@ -162,6 +169,17 @@ add_plot(plot_list,
                         ylim_range = c(-0.5, 3)),
          "concDep_uncl_b2_B")
 # 14x values not displayed as EC50 > 3; in all different groups!
+add_plot(plot_list,
+         create_boxplot(data_V2Cterm, "EC50",
+                        "conc_dep", "unclear",
+                        ylim_range = c(-0.5, 10)),
+         "concDep_uncl_V2Cterm")
+add_plot(plot_list,
+         create_boxplot(data_b2Cterm, "EC50",
+                        "conc_dep", "unclear",
+                        ylim_range = c(-0.5, 10)),
+         "concDep_uncl_b2Cterm")
+
 
 # EC50 log transformed
 add_plot(plot_list,
@@ -176,6 +194,16 @@ add_plot(plot_list,
                         ylim_range = c(-5, 5), log_transform = TRUE),
          "concDep_uncl_b2_log")
 # all values displayed
+add_plot(plot_list,
+         create_boxplot(data_V2Cterm, "EC50",
+                        "conc_dep", "unclear",
+                        ylim_range = c(-7, 10), log_transform = TRUE),
+         "concDep_uncl_V2Cterm_log")
+add_plot(plot_list,
+         create_boxplot(data_b2Cterm, "EC50",
+                        "conc_dep", "unclear",
+                        ylim_range = c(-5, 5), log_transform = TRUE),
+         "concDep_uncl_b2Cterm_log")
 
 # remaining parameters
 add_plot(plot_list,
@@ -208,6 +236,17 @@ add_plot(plot_list,
                         ylim_range = c(-0.5, 10)),
          "concDep_crit_b2")
 # 8x values not displayed as EC50 > 10; all in conc_dep = FALSE
+add_plot(plot_list,
+         create_boxplot(data_V2Cterm, "EC50",
+                        "conc_dep", "critical",
+                        ylim_range = c(-0.5, 10)),
+         "concDep_crit_V2Cterm")
+add_plot(plot_list,
+         create_boxplot(data_b2Cterm, "EC50",
+                        "conc_dep", "critical",
+                        ylim_range = c(-0.5, 10)),
+         "concDep_crit_b2Cterm")
+
 
 # EC50 log transformed
 add_plot(plot_list,
@@ -222,6 +261,17 @@ add_plot(plot_list,
                         ylim_range = c(-5, 5), log_transform = TRUE),
          "concDep_crit_b2_log")
 # all values displayed
+add_plot(plot_list,
+         create_boxplot(data_V2Cterm, "EC50",
+                        "conc_dep", "critical",
+                        ylim_range = c(-7, 10), log_transform = TRUE),
+         "concDep_crit_V2Cterm_log")
+add_plot(plot_list,
+         create_boxplot(data_b2Cterm, "EC50",
+                        "conc_dep", "critical",
+                        ylim_range = c(-5, 5), log_transform = TRUE),
+         "concDep_crit_b2Cterm_log")
+
 
 # remaining parameters
 add_plot(plot_list,
@@ -252,6 +302,16 @@ add_plot(plot_list,
                         "conc_dep",
                         ylim_range = c(-0.5, 10)),
          "concDep_b2")
+add_plot(plot_list,
+         create_boxplot(data_V2Cterm, "EC50",
+                        "conc_dep",
+                        ylim_range = c(-0.5, 10)),
+         "concDep_V2Cterm")
+add_plot(plot_list,
+         create_boxplot(data_b2Cterm, "EC50",
+                        "conc_dep",
+                        ylim_range = c(-0.5, 10)),
+         "concDep_b2Cterm")
 
 # EC50 log transformed
 add_plot(plot_list,
@@ -264,6 +324,16 @@ add_plot(plot_list,
                         "conc_dep",
                         ylim_range = c(-5, 5), log_transform = TRUE),
          "concDep_b2_log")
+add_plot(plot_list,
+         create_boxplot(data_V2Cterm, "EC50",
+                        "conc_dep",
+                        ylim_range = c(-7, 10), log_transform = TRUE),
+         "concDep_V2Cterm_log")
+add_plot(plot_list,
+         create_boxplot(data_b2Cterm, "EC50",
+                        "conc_dep",
+                        ylim_range = c(-5, 5), log_transform = TRUE),
+         "concDep_b2Cterm_log")
 
 # remaining parameters
 add_plot(plot_list,
