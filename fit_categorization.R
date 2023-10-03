@@ -105,6 +105,7 @@ create_boxplot <- function(data, plot_col,
   # Create boxplot
   p <- ggplot(data, aes(x = group_var, y = !!plot_col_sym)) +
     geom_boxplot() +
+    geom_jitter(width = 0.2, size = 2, alpha = 0.6) +  # Add jittered points
     labs(
       title = paste("Boxplots of", ifelse(log_transform, paste0("log10(", plot_col, ")"), plot_col),
                     "for GPCR with", paste(unique(data$GPCR), collapse = " ")),
