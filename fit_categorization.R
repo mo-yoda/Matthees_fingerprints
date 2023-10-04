@@ -110,6 +110,7 @@ create_boxplot <- function(data, plot_col,
       title = paste("Boxplots of", ifelse(log_transform, paste0("log10(", plot_col, ")"), plot_col),
                     "for GPCR with", paste(unique(data$GPCR), collapse = " ")),
       x = paste("Groups (", factor1, if (!is.null(factor2)) paste0(" and ", factor2), ")"),
+      y = ifelse(log_transform, paste0("log10(", plot_col, ")"), plot_col)  # Adjust y-axis label based on log_transform
     ) +
     ylim(ylim_range) +  # Set y-axis limit based on the ylim_range input
     theme(
@@ -137,10 +138,10 @@ data_b2 <- merged_data %>%
 
 # test Separation based on Cterm
 data_V2Cterm <- merged_data %>%
-    filter(str_detect(GPCR, "b2V2") | str_detect(GPCR, "V2R"))
+  filter(str_detect(GPCR, "b2V2") | str_detect(GPCR, "V2R"))
 
 data_b2Cterm <- merged_data %>%
-    filter(str_detect(GPCR, "b2AR") | str_detect(GPCR, "V2b2"))
+  filter(str_detect(GPCR, "b2AR") | str_detect(GPCR, "V2b2"))
 
 # initialize plot_list
 plot_list <- list()
