@@ -336,6 +336,11 @@ add_plot(plot_list,
                         "conc_dep",
                         ylim_range = c(-5, 5), log_transform = TRUE),
          "concDep_b2Cterm_log")
+add_plot(plot_list,
+         create_boxplot(merged_data, "EC50",
+                        "GPCR","conc_dep",
+                        ylim_range = c(-5, 5), log_transform = TRUE),
+         "concDep_GPCR_log")
 
 # remaining parameters
 add_plot(plot_list,
@@ -343,6 +348,21 @@ add_plot(plot_list,
                         "conc_dep",
                         ylim_range = c(-11, 13)),
          "concDep_hillSlope")
+add_plot(plot_list,
+         create_boxplot(merged_data, "Hill_slope",
+                        "GPCR", "conc_dep",
+                        ylim_range = c(-11, 13)),
+         "concDep_hillSlope_GPCR")
+add_plot(plot_list,
+         create_boxplot(merged_data, "Hill_slope",
+                        "conc_dep",
+                        ylim_range = c(-5, 3), log_transform = TRUE),
+         "concDep_hillSlopeLog")
+add_plot(plot_list,
+         create_boxplot(merged_data, "Hill_slope",
+                        "GPCR", "conc_dep",
+                        ylim_range = c(-5, 3), log_transform = TRUE),
+         "concDep_hillSlopeLog_GPCR")
 add_plot(plot_list,
          create_boxplot(merged_data, "RMSE",
                         "conc_dep",
@@ -360,8 +380,13 @@ create_xy_plot <- function(data, x_col, y_col, factor1 = NULL, factor2 = NULL,
   # Convert column names to symbols
   x_col <- sym(x_col)
   y_col <- sym(y_col)
-  factor1 <- sym(factor1)
-  factor2 <- sym(factor2)
+  # Convert factors to symbols if they're not NULL
+  if (!is.null(factor1)) {
+    factor1 <- sym(factor1)
+  }
+  if (!is.null(factor2)) {
+    factor2 <- sym(factor2)
+  }
 
   # Create ggplot
   p <- ggplot(data, aes(x = !!x_col, y = !!y_col))
@@ -390,7 +415,7 @@ create_xy_plot <- function(data, x_col, y_col, factor1 = NULL, factor2 = NULL,
     p <- p + lims(y = y_range)
   }
 
-# Set the axis labels based on transformation
+  # Set the axis labels based on transformation
   x_label <- if (log_x) paste0("log10(", quo_name(x_col), ")") else quo_name(x_col)
   y_label <- if (log_y) paste0("log10(", quo_name(y_col), ")") else quo_name(y_col)
 
@@ -411,22 +436,47 @@ create_xy_plot <- function(data, x_col, y_col, factor1 = NULL, factor2 = NULL,
 # 2x warnings if axis limits exclude some data points:
 # trans$transform(limits) : NaNs produced
 # Warning: Removed XX rows containing missing values (`geom_point()`).
-xy_plot <- create_xy_plot(merged_data,
-                          "EC50", "Hill_slope",
-                          "conc_dep", "critical",
-                          x_range = c(0, 3))
-xy_plot <- create_xy_plot(merged_data,
-                          "EC50", "Hill_slope",
-                          "conc_dep", "critical",
-                          x_range = c(-5, 300),
-                          log_x = TRUE)
-xy_plot <- create_xy_plot(merged_data,
-                          "EC50", "Hill_slope",
-                          "conc_dep", "critical",
-                          x_range = c(-5, 300),
-                          log_x = TRUE,
-                          log_y = TRUE)
-xy_plot
+create_xy_plot(merged_data,
+               "EC50", "Hill_slope",
+               "conc_dep", "critical",
+               x_range = c(-5, 300),
+               log_x = TRUE)
+create_xy_plot(merged_data,
+               "EC50", "Hill_slope",
+               "conc_dep", "critical",
+               x_range = c(-5, 300),
+               log_x = TRUE,
+               log_y = TRUE)
+# log10(Hill_slope) cannot plot negative hillslopes (49x values)
+rows_HS_neg <- which(merged_data$Hill_slope<0)
+rows_HS_neg_but_cd <- rows_HS_neg[merged_data$conc_dep[rows_HS_neg]==TRUE]
+# 10x conditions which are concentration-dependent but have neg. HS
+HS_neg_but_cd_df <- merged_data[rows_HS_neg_but_cd,]
+# these should be checked separately! -> they would be excluded, if we use this 2D plot for classification
+
+create_xy_plot(merged_data,
+               "EC50", "Hill_slope",
+               "conc_dep",
+               x_range = c(-5, 300),
+               log_x = TRUE,
+               log_y = TRUE)
+
+
+add_plot(plot_list,
+         create_xy_plot(merged_data,
+               "EC50", "Hill_slope",
+               "conc_dep", "critical",
+               x_range = c(-5, 300),
+               log_x = TRUE),
+         "logEC50_HS_all_data_crit")
+add_plot(plot_list,
+         create_xy_plot(merged_data,
+               "EC50", "Hill_slope",
+               "conc_dep", "critical",
+               x_range = c(-5, 300),
+               log_x = TRUE,
+               log_y = TRUE),
+         "logEC50_logHS_all_data_crit")
 
 
 # export created plots
