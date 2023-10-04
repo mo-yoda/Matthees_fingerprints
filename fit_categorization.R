@@ -433,8 +433,17 @@ create_xy_plot <- function(data, x_col, y_col, factor1 = NULL, factor2 = NULL,
 
     data_to_label <- filter(data, !!rlang::parse_expr(condition_str))
 
-    p <- p + geom_text(aes(label = paste(GPCR, bArr, cell_background, FlAsH, sep = ", ")),
-                       data = data_to_label, vjust = -1, size = 3)
+    p <- p + geom_label_repel(mapping = aes(label = paste(GPCR, bArr, cell_background, FlAsH, sep = ", ")),
+                              data = data_to_label,
+                              vjust = -1,
+                              size = 3,
+                              box.padding = 0, point.padding = 0.25,
+                              label.padding = 0.1,
+                              fill = NA,
+                              segment.color = "gray50",
+                              label.size = NA,
+                              seed = 1234,
+                              alpha = 0.7)
   }
 
   # Set the axis labels based on transformation
@@ -488,13 +497,13 @@ create_xy_plot(merged_data,
 
 )
 
-
 add_plot(plot_list,
          create_xy_plot(merged_data,
                         "EC50", "Hill_slope",
                         "conc_dep", "critical",
                         x_range = c(-5, 300),
-                        log_x = TRUE),
+                        log_x = TRUE,
+                        label_below_y = -1),
          "logEC50_HS_all_data_crit")
 add_plot(plot_list,
          create_xy_plot(merged_data,
@@ -510,11 +519,19 @@ add_plot(plot_list,
                         "conc_dep",
                         x_range = c(-5, 300),
                         log_x = TRUE,
-                        log_y = TRUE,
-                        label_below_x = 0.0001,
-                        label_above_x = 100,
-                        label_below_y = 0.1),
+                        log_y = TRUE),
          "logEC50_logHS_all_data_cd")
+add_plot(plot_list,
+         create_xy_plot(merged_data,
+                        "EC50", "Hill_slope",
+                        "conc_dep",
+                        x_range = c(-5, 300),
+                        log_x = TRUE,
+                        log_y = TRUE,
+                        label_below_x = 0.001,
+                        label_above_x = 3,
+                        label_below_y = 0.01),
+         "logEC50_logHS_all_data_cd_label")
 add_plot(plot_list,
          create_xy_plot(data_b2,
                         "EC50", "Hill_slope",
