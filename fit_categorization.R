@@ -621,5 +621,5 @@ for (i in seq_along(plot_list)) {
   # file name based on the plot name
   file_name <- paste0(names(plot_list)[i], ".png")
   # Save the plot to a file
-  ggsave(file_name, plot = plot_list[[i]], width = 7, height = 5)
+  ggsave(file_name, plot = plot_list[[i]], width = 10, height = 7)
 }
