@@ -338,7 +338,7 @@ add_plot(plot_list,
          "concDep_b2Cterm_log")
 add_plot(plot_list,
          create_boxplot(merged_data, "EC50",
-                        "GPCR","conc_dep",
+                        "GPCR", "conc_dep",
                         ylim_range = c(-5, 5), log_transform = TRUE),
          "concDep_GPCR_log")
 
@@ -376,7 +376,9 @@ add_plot(plot_list,
 
 ### 2D plotting
 create_xy_plot <- function(data, x_col, y_col, factor1 = NULL, factor2 = NULL,
-                           x_range = NULL, y_range = NULL, log_x = FALSE, log_y = FALSE) {
+                           x_range = NULL, y_range = NULL, log_x = FALSE, log_y = FALSE,
+                           label_above_y = NULL, label_below_y = NULL,
+                           label_above_x = NULL, label_below_x = NULL) {
   # Convert column names to symbols
   x_col <- sym(x_col)
   y_col <- sym(y_col)
@@ -415,6 +417,26 @@ create_xy_plot <- function(data, x_col, y_col, factor1 = NULL, factor2 = NULL,
     p <- p + lims(y = y_range)
   }
 
+  # Add labels based on the conditions specified
+  if (!is.null(label_above_y) ||
+    !is.null(label_below_y) ||
+    !is.null(label_above_x) ||
+    !is.null(label_below_x)) {
+
+    conditions <- c()
+    if (!is.null(label_above_y)) conditions <- c(conditions, paste0(y_col, " > ", label_above_y))
+    if (!is.null(label_below_y)) conditions <- c(conditions, paste0(y_col, " < ", label_below_y))
+    if (!is.null(label_above_x)) conditions <- c(conditions, paste0(x_col, " > ", label_above_x))
+    if (!is.null(label_below_x)) conditions <- c(conditions, paste0(x_col, " < ", label_below_x))
+
+    condition_str <- paste(conditions, collapse = " | ")
+
+    data_to_label <- filter(data, !!rlang::parse_expr(condition_str))
+
+    p <- p + geom_text(aes(label = paste(GPCR, bArr, cell_background, FlAsH, sep = ", ")),
+                       data = data_to_label, vjust = -1, size = 3)
+  }
+
   # Set the axis labels based on transformation
   x_label <- if (log_x) paste0("log10(", quo_name(x_col), ")") else quo_name(x_col)
   y_label <- if (log_y) paste0("log10(", quo_name(y_col), ")") else quo_name(y_col)
@@ -448,8 +470,8 @@ create_xy_plot(merged_data,
                log_x = TRUE,
                log_y = TRUE)
 # log10(Hill_slope) cannot plot negative hillslopes (49x values)
-rows_HS_neg <- which(merged_data$Hill_slope<0)
-rows_HS_neg_but_cd <- rows_HS_neg[merged_data$conc_dep[rows_HS_neg]==TRUE]
+rows_HS_neg <- which(merged_data$Hill_slope < 0)
+rows_HS_neg_but_cd <- rows_HS_neg[merged_data$conc_dep[rows_HS_neg] == TRUE]
 # 10x conditions which are concentration-dependent but have neg. HS
 HS_neg_but_cd_df <- merged_data[rows_HS_neg_but_cd,]
 # these should be checked separately! -> they would be excluded, if we use this 2D plot for classification
@@ -459,64 +481,71 @@ create_xy_plot(merged_data,
                "conc_dep",
                x_range = c(-5, 300),
                log_x = TRUE,
-               log_y = TRUE
+               log_y = TRUE,
+               label_below_y = 0.01,
+               label_below_x = 0.0001,
+               label_above_x = 3
+
 )
 
 
 add_plot(plot_list,
          create_xy_plot(merged_data,
-               "EC50", "Hill_slope",
-               "conc_dep", "critical",
-               x_range = c(-5, 300),
-               log_x = TRUE),
+                        "EC50", "Hill_slope",
+                        "conc_dep", "critical",
+                        x_range = c(-5, 300),
+                        log_x = TRUE),
          "logEC50_HS_all_data_crit")
 add_plot(plot_list,
          create_xy_plot(merged_data,
-               "EC50", "Hill_slope",
-               "conc_dep", "critical",
-               x_range = c(-5, 300),
-               log_x = TRUE,
-               log_y = TRUE),
+                        "EC50", "Hill_slope",
+                        "conc_dep", "critical",
+                        x_range = c(-5, 300),
+                        log_x = TRUE,
+                        log_y = TRUE),
          "logEC50_logHS_all_data_crit")
 add_plot(plot_list,
          create_xy_plot(merged_data,
-               "EC50", "Hill_slope",
-               "conc_dep",
-               x_range = c(-5, 300),
-               log_x = TRUE,
-               log_y = TRUE),
+                        "EC50", "Hill_slope",
+                        "conc_dep",
+                        x_range = c(-5, 300),
+                        log_x = TRUE,
+                        log_y = TRUE,
+                        label_below_x = 0.0001,
+                        label_above_x = 100,
+                        label_below_y = 0.1),
          "logEC50_logHS_all_data_cd")
 add_plot(plot_list,
          create_xy_plot(data_b2,
-               "EC50", "Hill_slope",
-               "conc_dep",
-               x_range = c(-5, 300),
-               log_x = TRUE,
-               log_y = TRUE),
+                        "EC50", "Hill_slope",
+                        "conc_dep",
+                        x_range = c(-5, 300),
+                        log_x = TRUE,
+                        log_y = TRUE),
          "logEC50_logHS_b2_cd")
 add_plot(plot_list,
          create_xy_plot(data_V2,
-               "EC50", "Hill_slope",
-               "conc_dep",
-               x_range = c(-5, 300),
-               log_x = TRUE,
-               log_y = TRUE),
+                        "EC50", "Hill_slope",
+                        "conc_dep",
+                        x_range = c(-5, 300),
+                        log_x = TRUE,
+                        log_y = TRUE),
          "logEC50_logHS_V2_cd")
 add_plot(plot_list,
          create_xy_plot(data_b2Cterm,
-               "EC50", "Hill_slope",
-               "conc_dep",
-               x_range = c(-5, 300),
-               log_x = TRUE,
-               log_y = TRUE),
+                        "EC50", "Hill_slope",
+                        "conc_dep",
+                        x_range = c(-5, 300),
+                        log_x = TRUE,
+                        log_y = TRUE),
          "logEC50_logHS_b2Cterm_cd")
 add_plot(plot_list,
          create_xy_plot(data_V2Cterm,
-               "EC50", "Hill_slope",
-               "conc_dep",
-               x_range = c(-5, 300),
-               log_x = TRUE,
-               log_y = TRUE),
+                        "EC50", "Hill_slope",
+                        "conc_dep",
+                        x_range = c(-5, 300),
+                        log_x = TRUE,
+                        log_y = TRUE),
          "logEC50_logHS_V2Cterm_cd")
 
 
