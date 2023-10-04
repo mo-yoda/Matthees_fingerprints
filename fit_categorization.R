@@ -486,18 +486,7 @@ rows_HS_neg_but_cd <- rows_HS_neg[merged_data$conc_dep[rows_HS_neg] == TRUE]
 # 10x conditions which are concentration-dependent but have neg. HS
 HS_neg_but_cd_df <- merged_data[rows_HS_neg_but_cd,]
 # these should be checked separately! -> they would be excluded, if we use this 2D plot for classification
-
-create_xy_plot(merged_data,
-               "EC50", "Hill_slope",
-               "conc_dep",
-               x_range = c(-5, 300),
-               log_x = TRUE,
-               log_y = TRUE,
-               label_below_y = 0.01,
-               label_below_x = 0.0001,
-               label_above_x = 3
-
-)
+write_xlsx(HS_neg_but_cd_df, paste0(path, r"(\categories\Neg_Hillslope_but_CD.xlsx)"))
 
 add_plot(plot_list,
          create_xy_plot(merged_data,
@@ -515,6 +504,22 @@ add_plot(plot_list,
                         log_x = TRUE,
                         log_y = TRUE),
          "logEC50_logHS_all_data_crit")
+add_plot(plot_list,
+         create_xy_plot(merged_data,
+                        "EC50", "Hill_slope",
+                        "conc_dep",
+                        x_range = c(-5, 300),
+                        log_x = TRUE),
+         "logEC50_HS_all_data")
+add_plot(plot_list,
+         create_xy_plot(merged_data,
+                        "EC50", "Hill_slope",
+                        "conc_dep",
+                        x_range = c(-5, 300),
+                        log_x = TRUE,
+                        label_below_y = 0.03,
+                        label_below_x = 0.0003),
+         "logEC50_HS_all_data_label")
 add_plot(plot_list,
          create_xy_plot(merged_data,
                         "EC50", "Hill_slope",
