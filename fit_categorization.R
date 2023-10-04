@@ -459,7 +459,8 @@ create_xy_plot(merged_data,
                "conc_dep",
                x_range = c(-5, 300),
                log_x = TRUE,
-               log_y = TRUE)
+               log_y = TRUE
+)
 
 
 add_plot(plot_list,
@@ -477,6 +478,46 @@ add_plot(plot_list,
                log_x = TRUE,
                log_y = TRUE),
          "logEC50_logHS_all_data_crit")
+add_plot(plot_list,
+         create_xy_plot(merged_data,
+               "EC50", "Hill_slope",
+               "conc_dep",
+               x_range = c(-5, 300),
+               log_x = TRUE,
+               log_y = TRUE),
+         "logEC50_logHS_all_data_cd")
+add_plot(plot_list,
+         create_xy_plot(data_b2,
+               "EC50", "Hill_slope",
+               "conc_dep",
+               x_range = c(-5, 300),
+               log_x = TRUE,
+               log_y = TRUE),
+         "logEC50_logHS_b2_cd")
+add_plot(plot_list,
+         create_xy_plot(data_V2,
+               "EC50", "Hill_slope",
+               "conc_dep",
+               x_range = c(-5, 300),
+               log_x = TRUE,
+               log_y = TRUE),
+         "logEC50_logHS_V2_cd")
+add_plot(plot_list,
+         create_xy_plot(data_b2Cterm,
+               "EC50", "Hill_slope",
+               "conc_dep",
+               x_range = c(-5, 300),
+               log_x = TRUE,
+               log_y = TRUE),
+         "logEC50_logHS_b2Cterm_cd")
+add_plot(plot_list,
+         create_xy_plot(data_V2Cterm,
+               "EC50", "Hill_slope",
+               "conc_dep",
+               x_range = c(-5, 300),
+               log_x = TRUE,
+               log_y = TRUE),
+         "logEC50_logHS_V2Cterm_cd")
 
 
 # export created plots
