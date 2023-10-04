@@ -4,6 +4,7 @@ wants <- c("openxlsx",
            "stringr",
            "dplyr",
            "ggplot2",
+           "scales",
            "writexl"
 )
 has <- wants %in% rownames(installed.packages())
@@ -376,24 +377,30 @@ create_xy_plot <- function(data, x_col, y_col, factor1 = NULL, factor2 = NULL,
 
   # Apply log10 transformation if specified, and set axes ranges if provided
   if (log_x) {
-    p <- p + scale_x_log10(limits = x_range)
+    p <- p + scale_x_log10(limits = x_range,
+                           labels = trans_format("log10", math_format(10^.x)))
   } else if (!is.null(x_range)) {
     p <- p + lims(x = x_range)
   }
 
   if (log_y) {
-    p <- p + scale_y_log10(limits = y_range)
+    p <- p + scale_y_log10(limits = y_range,
+                           labels = trans_format("log10", math_format(10^.x)))
   } else if (!is.null(y_range)) {
     p <- p + lims(y = y_range)
   }
+
+# Set the axis labels based on transformation
+  x_label <- if (log_x) paste0("log10(", quo_name(x_col), ")") else quo_name(x_col)
+  y_label <- if (log_y) paste0("log10(", quo_name(y_col), ")") else quo_name(y_col)
 
   # Enhance plot
   p <- p +
     theme_minimal(base_size = 15) +  # Increase base font size
     labs(
       title = paste("Scatter plot of", quo_name(x_col), "versus", quo_name(y_col)),
-      x = quo_name(x_col),
-      y = quo_name(y_col)
+      x = x_label,
+      y = y_label
     )
 
   # Return the plot
@@ -401,6 +408,9 @@ create_xy_plot <- function(data, x_col, y_col, factor1 = NULL, factor2 = NULL,
 }
 
 # Usage:
+# 2x warnings if axis limits exclude some data points:
+# trans$transform(limits) : NaNs produced
+# Warning: Removed XX rows containing missing values (`geom_point()`).
 xy_plot <- create_xy_plot(merged_data,
                           "EC50", "Hill_slope",
                           "conc_dep", "critical",
