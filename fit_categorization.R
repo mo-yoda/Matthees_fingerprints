@@ -487,6 +487,13 @@ rows_HS_neg_but_cd <- rows_HS_neg[merged_data$conc_dep[rows_HS_neg] == TRUE]
 HS_neg_but_cd_df <- merged_data[rows_HS_neg_but_cd,]
 # these should be checked separately! -> they would be excluded, if we use this 2D plot for classification
 write_xlsx(HS_neg_but_cd_df, paste0(path, r"(\categories\Neg_Hillslope_but_CD.xlsx)"))
+merged_data[rows_HS_neg ,]
+write_xlsx(merged_data[rows_HS_neg,], paste0(path, r"(\categories\Neg_Hillslope.xlsx)"))
+
+# critical HS, > 0.01 & < 0.1; some are cd and some are not
+rows_HS_critical <- which(merged_data$Hill_slope > 0.01 & merged_data$Hill_slope < 0.1)
+write_xlsx(merged_data[rows_HS_critical,], paste0(path, r"(\categories\Critical_HillSlope.xlsx)"))
+
 
 add_plot(plot_list,
          create_xy_plot(merged_data,
