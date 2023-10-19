@@ -40,7 +40,7 @@ path <- r"(C:\Users\monar\Google Drive\Arbeit\homeoffice\231119_EM_PROGRAM_newda
 setwd(path)
 
 # Load data
-classes <- readxl::read_xlsx(r"(\231012_categorized-master-plot_List.xlsx)")
+classes <- readxl::read_xlsx("231012_categorized-master-plot_List.xlsx")
 
 # CHOOSE: normalised or non-normalised data
 path_to_Normfits <- paste0(path, r"(\start_normalised\)")
@@ -81,7 +81,11 @@ merged_data <- merged_data %>%
     conc_dep = translate_to_logical(conc_dep),
     critical = translate_to_logical(critical)
   )
-write_xlsx(merged_data, paste0(path, r"(\categories\Fit_parameters_classes.xlsx)"))
+folder_name <- c("categories")
+if (!dir.exists(folder_name)) {
+    dir.create(folder_name)
+  }
+write_xlsx(merged_data, paste0(getwd(), r"(\categories\Fit_parameters_classes.xlsx)"))
 
 ### plot parameters based on different factors
 # function for plotting
@@ -492,13 +496,13 @@ rows_HS_neg_but_cd <- rows_HS_neg[merged_data$conc_dep[rows_HS_neg] == TRUE]
 # 10x conditions which are concentration-dependent but have neg. HS
 HS_neg_but_cd_df <- merged_data[rows_HS_neg_but_cd,]
 # these should be checked separately! -> they would be excluded, if we use this 2D plot for classification
-write_xlsx(HS_neg_but_cd_df, paste0(path, r"(\categories\Neg_Hillslope_but_CD.xlsx)"))
+write_xlsx(HS_neg_but_cd_df, paste0(getwd(), r"(\categories\Neg_Hillslope_but_CD.xlsx)"))
 merged_data[rows_HS_neg ,]
-write_xlsx(merged_data[rows_HS_neg,], paste0(path, r"(\categories\Neg_Hillslope.xlsx)"))
+write_xlsx(merged_data[rows_HS_neg,], paste0(getwd(), r"(\categories\Neg_Hillslope.xlsx)"))
 
 # critical HS, > 0.01 & < 0.1; some are cd and some are not
 rows_HS_critical <- which(merged_data$Hill_slope > 0.01 & merged_data$Hill_slope < 0.1)
-write_xlsx(merged_data[rows_HS_critical,], paste0(path, r"(\categories\Critical_HillSlope.xlsx)"))
+write_xlsx(merged_data[rows_HS_critical,], paste0(getwd(), r"(\categories\Critical_HillSlope.xlsx)"))
 
 
 add_plot(plot_list,
@@ -629,11 +633,7 @@ add_plot(plot_list,
 
 
 # export created plots
-folder_name <- c("categories")
-if (!dir.exists(folder_name)) {
-    dir.create(folder_name)
-  }
-setwd(paste0(path, r"(\categories\)"))
+setwd(paste0(getwd(), r"(\categories\)"))
 for (i in seq_along(plot_list)) {
   # file name based on the plot name
   file_name <- paste0(names(plot_list)[i], ".png")
