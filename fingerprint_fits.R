@@ -29,7 +29,18 @@ fit_data <- function(curr_data) {
 }
 
 # Function to create a base plot
-create_base_plot <- function(curr_data, experiment) {
+create_base_plot <- function(curr_data, experiment, fit_attempt = NULL) {
+   # Default subtitle if no fit_attempt provided
+  subtitle_text <- ""
+
+# If fit_attempt is provided, extract the Hill_slope and EC50 values
+  if (!is.null(fit_attempt)) {
+    hill_slope_value <- fit_attempt$fit$par[1]
+    ec50_value <- fit_attempt$fit$par[4]
+    subtitle_text <- paste("Hill Slope:", round(hill_slope_value, 3),
+                           "EC50:", round(ec50_value, 3))
+  }
+
   ggplot(curr_data, aes(x = ligand_conc, y = signal)) +
     geom_point(size = 2) + # Plot the actual data points
     stat_summary(fun = mean,
@@ -37,7 +48,9 @@ create_base_plot <- function(curr_data, experiment) {
                  aes(group = 1),
                  colour = "red",
                  size = 4) +  # Plot mean of replicates
-    labs(x = "Ligand Concentration", y = "Signal", title = experiment) +
+    labs(x = "Ligand Concentration", y = "Signal",
+         title = experiment,
+    subtitle = subtitle_text) +
     theme_minimal()
 }
 
@@ -100,7 +113,7 @@ process_dataset <- function(data) {
       fit_attempt <- fit_data(curr_data)
       # Create the base plot
       if (!is.null(fit_attempt)) {
-        plot <- create_base_plot(curr_data, experiment)
+        plot <- create_base_plot(curr_data, experiment, fit_attempt)
         plot <- add_fit_line(plot, fit_attempt, curr_data)
         temp_pars <- extract_fit_pars(fit_attempt, curr_data, experiment)
         fit_pars_list <<- append(fit_pars_list, list(temp_pars))
@@ -137,7 +150,7 @@ path <- r"(C:\Users\monar\Google Drive\Arbeit\homeoffice\231119_EM_PROGRAM_newda
 setwd(path)
 
 # Load data
-import_file <- "Master_SN_reformat.xlsx"
+import_file <- "Master_reformat.xlsx"
 data <- readxl::read_xlsx(import_file)
 
 # create folders for normalised and non-normalised data
