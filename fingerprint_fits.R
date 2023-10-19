@@ -137,9 +137,23 @@ path <- r"(C:\Users\monar\Google Drive\Arbeit\homeoffice\231119_EM_PROGRAM_newda
 setwd(path)
 
 # Load data
-data <- readxl::read_xlsx("Master_SN_reformat.xlsx")
+import_file <- "Master_SN_reformat.xlsx"
+data <- readxl::read_xlsx(import_file)
+
+# create folders for normalised and non-normalised data
+folder_names <- c("start_normalised", "non_normalised")
+for (folder_name in folder_names) {
+  if (!dir.exists(folder_name)) {
+    dir.create(folder_name)
+  }
+}
 
 # Call the main function
+if (str_detect(import_file, "SN")){
+        setwd(paste0(getwd(), "/start_normalised"))
+      } else{
+        setwd(paste0(getwd(), "/non_normalised"))
+      }
 fit_pars <- process_dataset(data)
 
 ### Fit parameter analysis

@@ -36,7 +36,7 @@ translate_to_logical <- function(column) {
 }
 
 ### data processing
-path <- r"(C:\Users\monar\Google Drive\Arbeit\homeoffice\230918_EM_PROGRAM)"
+path <- r"(C:\Users\monar\Google Drive\Arbeit\homeoffice\231119_EM_PROGRAM_newdata)"
 setwd(path)
 
 # Load data
