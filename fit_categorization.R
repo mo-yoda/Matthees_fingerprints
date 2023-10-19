@@ -40,8 +40,14 @@ path <- r"(C:\Users\monar\Google Drive\Arbeit\homeoffice\231119_EM_PROGRAM_newda
 setwd(path)
 
 # Load data
+classes <- readxl::read_xlsx(r"(\231012_categorized-master-plot_List.xlsx)")
+
+# CHOOSE: normalised or non-normalised data
+path_to_Normfits <- paste0(path, r"(\start_normalised\)")
+path_to_NonNormfits <- paste0(path, r"(\non_normalised\)")
+
+setwd(path_to_Normfits)
 fit_pars_og <- readxl::read_xlsx("Fit_parameters.xlsx")
-classes <- readxl::read_xlsx(paste0(path, r"(\categories\230922_categorized-master-plot_List.xlsx)"))
 
 # Split the 'experiment' column into separate columns for each factor
 fit_pars <- fit_pars_og %>%
@@ -623,6 +629,10 @@ add_plot(plot_list,
 
 
 # export created plots
+folder_name <- c("categories")
+if (!dir.exists(folder_name)) {
+    dir.create(folder_name)
+  }
 setwd(paste0(path, r"(\categories\)"))
 for (i in seq_along(plot_list)) {
   # file name based on the plot name
