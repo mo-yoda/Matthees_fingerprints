@@ -137,7 +137,7 @@ path <- r"(C:\Users\monar\Google Drive\Arbeit\homeoffice\231119_EM_PROGRAM_newda
 setwd(path)
 
 # Load data
-data <- readxl::read_xlsx("Master_reformat.xlsx")
+data <- readxl::read_xlsx("Master_SN_reformat.xlsx")
 
 # Call the main function
 fit_pars <- process_dataset(data)
