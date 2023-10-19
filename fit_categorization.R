@@ -4,6 +4,7 @@ wants <- c("openxlsx",
            "stringr",
            "dplyr",
            "ggplot2",
+           "ggrepel",
            "scales",
            "writexl"
 )
@@ -130,7 +131,7 @@ create_boxplot <- function(data, plot_col,
     )
 
   # Return the plot
-  return(p)
+  return(invisible(p))
 }
 
 # function to save plots in list with name
@@ -472,7 +473,7 @@ create_xy_plot <- function(data, x_col, y_col, factor1 = NULL, factor2 = NULL,
     )
 
   # Return the plot
-  return(p)
+  return(invisible(p))
 }
 
 # Usage:
