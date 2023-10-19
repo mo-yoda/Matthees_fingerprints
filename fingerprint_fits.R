@@ -133,7 +133,8 @@ process_dataset <- function(data) {
 }
 
 ### Data processing
-setwd(r"(C:\Users\monar\Google Drive\Arbeit\homeoffice\230918_EM_PROGRAM)")
+path <- r"(C:\Users\monar\Google Drive\Arbeit\homeoffice\231119_EM_PROGRAM_newdata)"
+setwd(path)
 
 # Load data
 data <- readxl::read_xlsx("Master_reformat.xlsx")
