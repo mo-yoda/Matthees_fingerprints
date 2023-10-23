@@ -32,13 +32,15 @@ normalize_by_factor <- function(data, factor_name) {
 
   # Normalize the mean_signal by dividing it by min_signal
   data <- data %>%
+    ## fix this!!!-------------------------------------
     dplyr::mutate(normalized_signal = mean_signal / min_signal)
 
   # Drop the min_signal column as it's no longer needed
-  data$min_signal <- NULL
+  # data$min_signal <- NULL
 
   return(data)
 }
+test <- normalize_by_factor(filtered_data, factor_name = "GPCR")
 
 # Create matrix for heatmap (optional subsetting of several levels)
 create_matrix_from_factors <- function(data, col_factor,
@@ -120,12 +122,13 @@ collect_heatmaps <- function(plot_list, data, col_factor,
                              cutree_rows = NA,
                              cutree_cols = NA,
                              display_numbers = FALSE,
-                             height = 8,
-                             width = 10,
+                             height = 20,
+                             width = 20,
                              fontsize = 10) {
   # Optionally normalize the data
   if (normalize && !is.null(normalize_factor)) {
     data <- normalize_by_factor(data, normalize_factor)
+    data$mean_signal <- data$normalized_signal
   }
 
   # Create the matrix
@@ -157,8 +160,30 @@ plot_list <- list()
 plot_list <- collect_heatmaps(plot_list,
                               filtered_data,
                               "FlAsH",
-                              normalize = TRUE, normalize_factor = "GPCR")
+                              clustering_distance_cols = NULL,
+subset_factor = "cell_background", subset_levels = c("dQ+EV", "Con"),
+                              height = 15, width = 15)
 
+plot_list <- collect_heatmaps(plot_list,
+                              filtered_data,
+"FlAsH", clustering_distance_cols = NULL,
+                              normalize = TRUE, normalize_factor = "GPCR",
+                              cutree_rows=10,
+                              height = 15, width = 15)
+plot_list <- collect_heatmaps(plot_list,
+                              filtered_data,
+"FlAsH", clustering_distance_cols = NULL,
+                              subset_factor = "bArr", subset_levels = "bArr1",
+                              normalize = TRUE, normalize_factor = "GPCR",
+                              cutree_rows=3,
+                              height = 15, width = 15)
+plot_list <- collect_heatmaps(plot_list,
+                              filtered_data,
+"FlAsH", clustering_distance_cols = NULL,
+                              subset_factor = "bArr", subset_levels = "bArr2",
+                              normalize = TRUE, normalize_factor = "GPCR",
+                              cutree_rows=3,
+                              height = 15, width = 15)
 
 ### export plots
 folder_name <- c("231023_heatmaps")
