@@ -309,6 +309,3 @@ fit_pars <- add_outlier_columns(fit_pars, outliers_list)
 write_xlsx(fit_pars, "Fit_parameters.xlsx")
 
 
-###
-# consider getting residuals from fit
-residuals(model)
