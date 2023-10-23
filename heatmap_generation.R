@@ -87,13 +87,9 @@ draw_heatmap <- function(matrix_data,
   if (is.na(cutree_rows)) cutree_rows <- 1
   if (is.na(cutree_cols)) cutree_cols <- 1
 
-  # Create a custom annotation bar for the cell numbers
-  annotation = NULL
-  if (display_numbers) {
-    annotation <- matrix_data
-    annotation_colors <- colorRampPalette(c("white", "black"))(length(unique(c(matrix_data))))
-    names(annotation_colors) <- sort(unique(c(matrix_data)))
-  }
+# Construct title with clustering distances
+  title <- paste("Heatmap (Row Dist:", clustering_distance_rows,
+                 "& Col Dist:", clustering_distance_cols, ")")
 
   pheatmap(matrix_data,
            clustering_distance_rows = clustering_distance_rows,
@@ -106,6 +102,7 @@ draw_heatmap <- function(matrix_data,
            display_numbers = display_numbers,
            cluster_rows = clustering_rows,
            cluster_cols = clustering_cols,
+           main = title,
            border_color = NA)
 }
 
