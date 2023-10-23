@@ -112,6 +112,7 @@ prepare_matrix_data <- function(unprocessed_data, reference) {
 }
 
 processed_data <- prepare_matrix_data(data, include_data)
+write_xlsx(processed_data, "Filtered_SN_Master.xlsx")
 
 
 
