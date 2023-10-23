@@ -140,8 +140,8 @@ create_boxplot <- function(data, plot_col,
 # function to save plots in list with name
 add_plot <- function(plot_list, new_plot, plot_name) {
   # Combine the existing list with the new plot
-  plot_list <<- c(plot_list, setNames(list(new_plot), plot_name))
-  return(plot_list)
+  plot_list <<- append(plot_list, setNames(list(new_plot), plot_name))
+  return(invisible(plot_list))
 }
 
 # Separation for EC50 based on the starting string of GPCR
