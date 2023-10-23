@@ -23,8 +23,8 @@ fit_data <- function(curr_data) {
         robust = 'mean',
         na.action = 'na.omit',
         ### --> for Hill_slope = 1, use line below + comment LL.4
-        fct = LL.3(names = c("Min", "Max", "EC50"))
-        # fct = LL.4(names = c("Hill slope", "Min", "Max", "EC50"))
+        # fct = LL.3(names = c("Min", "Max", "EC50"))
+        fct = LL.4(names = c("Hill slope", "Min", "Max", "EC50"))
     )
   }, error = function(e) {
     return(NULL)
@@ -39,12 +39,12 @@ create_base_plot <- function(curr_data, experiment, fit_attempt = NULL) {
   # If fit_attempt is provided, extract the Hill_slope and EC50 values
   if (!is.null(fit_attempt)) {
     ### --> for Hill_slope = 1, comment line below
-    # hill_slope_value <- fit_attempt$fit$par[1]
+    hill_slope_value <- fit_attempt$fit$par[1]
     ec50_value <- fit_attempt$fit$par[length(fit_attempt$fit$par)]
 
     subtitle_text <- paste(
       ### --> for Hill_slope = 1, comment line below
-      # "Hill Slope:", round(hill_slope_value, 3),
+      "Hill Slope:", round(hill_slope_value, 3),
       "EC50:", round(ec50_value, 3))
   }
 
@@ -160,11 +160,14 @@ path <- r"(C:\Users\marli\Desktop\231119_EM_PROGRAM_newdata)"
 setwd(path)
 
 # Load data
-import_file <- "Master_SN_reformat.xlsx"
+import_file <- "Master_reformat.xlsx"
 data <- readxl::read_xlsx(import_file)
 
 # create folders for normalised and non-normalised data
-folder_names <- c("start_normalised_HS_constrain", "non_normalised_HS_constrain")
+folder_names <- c("start_normalised",
+                  "start_normalised_HS_constrain",
+                  "non_normalised",
+                  "non_normalised_HS_constrain")
 for (folder_name in folder_names) {
   if (!dir.exists(folder_name)) {
     dir.create(folder_name)
@@ -173,9 +176,9 @@ for (folder_name in folder_names) {
 
 # Call the main function
 if (str_detect(import_file, "SN")) {
-  setwd(paste0(getwd(), "/start_normalised_HS_constrain"))
+  setwd(paste0(getwd(), "/start_normalised"))
 } else {
-  setwd(paste0(getwd(), "/non_normalised_HS_constrain"))
+  setwd(paste0(getwd(), "/non_normalised"))
 }
 fit_pars <- process_dataset(data)
 
@@ -228,7 +231,7 @@ remove_outliers <- function(data, outliers) {
 
 ### --> for Hill_slope = 1, comment line below
 # Hill Slope outliers
-# outliers_HS <- extract_outliers(fit_pars, "Hill_slope")
+outliers_HS <- extract_outliers(fit_pars, "Hill_slope")
 # bounds are -3.255 and 5.432
 # 33 outliers
 
@@ -291,14 +294,14 @@ add_outlier_columns <- function(fit_pars, outliers_list) {
 # List of outlier experiments for each parameter
 outliers_list <- list(
   ### --> for Hill_slope = 1
-  #outliers_HS,
+  outliers_HS,
   c(outliers_V2EC50, outliers_b2EC50),
   c(outliers_V2EC50, outliers_logb2EC50),
   outliers_RMSE,
   outliers_MAE)
 names(outliers_list) <- c(
   ### --> for Hill_slope = 1
-  #"Hill_slope",
+  "Hill_slope",
   "EC50",
   "logEC50",
   "RMSE",
