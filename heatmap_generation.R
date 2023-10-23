@@ -89,12 +89,37 @@ draw_heatmap <- function(matrix_data,
            border_color = NA)
 }
 
+add_plot <- function(plot_list, new_plot, plot_name) {
+  # Combine the existing list with the new plot
+  plot_list <<- append(plot_list, setNames(list(new_plot), plot_name))
+  return(invisible(plot_list))
+}
 
-m1 <- create_matrix_from_factors(filtered_data, "FlAsH")
+# initialize plot_list
+plot_list <- list()
+
+add_plot(plot_list,
+         draw_heatmap(
+           create_matrix_from_factors(
+             filtered_data, "FlAsH"
+           )
+         ),
+"all_data_flash")
 
 m2 <- create_matrix_from_factors(filtered_data,
                                  "cell_background",
                                  "GPCR",
                                  c("V2R", "V2b2"))
-
 draw_heatmap(m2)
+
+folder_name <- c("231023_heatmaps")
+if (!dir.exists(folder_name)) {
+    dir.create(folder_name)
+  }
+setwd(paste0(getwd(), "/", folder_name, "/"))
+for (i in seq_along(plot_list)) {
+  # file name based on the plot name
+  file_name <- paste0(names(plot_list)[i], ".png")
+  # Save the plot to a file
+  ggsave(file_name, plot = plot_list[[i]], width = 10, height = 7)
+}
