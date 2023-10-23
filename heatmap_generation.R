@@ -20,6 +20,26 @@ setwd(path)
 import_file <- "Filtered_SN_Master.xlsx"
 filtered_data <- readxl::read_xlsx(import_file)
 
+normalize_by_factor <- function(data, factor_name) {
+  # Calculate the minimum value of mean_signal for each level of the factor
+  min_values <- data %>%
+    dplyr::group_by(!!dplyr::sym(factor_name)) %>%
+    dplyr::summarise(min_signal = min(mean_signal, na.rm = TRUE))
+
+  # Join the min_values with the main data
+  data <- data %>%
+    dplyr::left_join(min_values, by = factor_name)
+
+  # Normalize the mean_signal by dividing it by min_signal
+  data <- data %>%
+    dplyr::mutate(normalized_signal = mean_signal / min_signal)
+
+  # Drop the min_signal column as it's no longer needed
+  data$min_signal <- NULL
+
+  return(data)
+}
+
 # Create matrix for heatmap (optional subsetting of several levels)
 create_matrix_from_factors <- function(data, col_factor,
                                        subset_factor = NULL,
@@ -106,12 +126,17 @@ add_plot(plot_list,
          ),
 "all_data_flash")
 
+normalized_data <- normalize_by_factor(filtered_data, "GPCR")
+
 m2 <- create_matrix_from_factors(filtered_data,
                                  "cell_background",
                                  "GPCR",
                                  c("V2R", "V2b2"))
 draw_heatmap(m2)
 
+
+
+### export plots
 folder_name <- c("231023_heatmaps")
 if (!dir.exists(folder_name)) {
     dir.create(folder_name)
