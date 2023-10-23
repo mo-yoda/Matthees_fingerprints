@@ -89,7 +89,8 @@ extract_fit_pars <- function(fit_attempt, curr_data, experiment) {
 
   data.frame(
     experiment = experiment,
-    # Hill_slope = fit_attempt$fit$par[1],
+    ### --> for Hill_slope = 1, comment line below
+    Hill_slope = fit_attempt$fit$par[1],
     EC50 = fit_attempt$fit$par[length(fit_attempt$fit$par)],
     RMSE = rmse_value,
     MAE = mae_value
