@@ -3,6 +3,7 @@ wants <- c("openxlsx",
            "dplyr",
            "tidyr",
            "pheatmap",
+           "ggplot2",
            "writexl"
 )
 has <- wants %in% rownames(installed.packages())
@@ -35,7 +36,7 @@ normalize_by_factor <- function(data, factor_name) {
     dplyr::mutate(normalized_signal = mean_signal / min_signal)
 
   # Drop the min_signal column as it's no longer needed
-  data$min_signal <- NULL
+  # data$min_signal <- NULL
 
   return(data)
 }
@@ -88,8 +89,13 @@ draw_heatmap <- function(matrix_data,
   if (is.na(cutree_cols)) cutree_cols <- 1
 
   # Construct title with clustering distances
-  title <- paste("Heatmap (Row Dist:", clustering_distance_rows,
-                 "& Col Dist:", clustering_distance_cols, ")")
+  if (!is.null(clustering_distance_rows) && !is.null(clustering_distance_cols)) {
+    title <- paste("Row Dist:", clustering_distance_rows,
+                 "& Col Dist:", clustering_distance_cols)
+  }
+  if (!is.null(clustering_distance_rows)) title <- paste("Row Dist:", clustering_distance_rows)
+  if (!is.null(clustering_distance_cols)) title <- paste("Row Dist:", clustering_distance_cols)
+
 
   pheatmap(matrix_data,
            clustering_distance_rows = clustering_distance_rows,
@@ -120,12 +126,19 @@ collect_heatmaps <- function(plot_list, data, col_factor,
                              cutree_rows = NA,
                              cutree_cols = NA,
                              display_numbers = FALSE,
-                             height = 8,
-                             width = 10,
+                             height = 20,
+                             width = 20,
                              fontsize = 10) {
+# Optionally subset the data
+  if (!is.null(subset_factor) && !is.null(subset_levels)) {
+    data <- dplyr::filter(data, !!sym(subset_factor) %in% subset_levels)
+  }
+
   # Optionally normalize the data
   if (normalize && !is.null(normalize_factor)) {
     data <- normalize_by_factor(data, normalize_factor)
+    # Replace mean_signal with normalized_signal for further processing
+    data$mean_signal <- data$normalized_signal
   }
 
   # Create the matrix
@@ -141,7 +154,10 @@ collect_heatmaps <- function(plot_list, data, col_factor,
 
   # Create the plot name based on normalization and col_factor
   plot_name <- paste(col_factor,
-                     ifelse(normalize, paste("normalized by", normalize_factor), "not normalized"),
+                     ifelse(normalize, paste("norm by", normalize_factor), "not norm"),
+                     ifelse(!is.null(subset_factor), paste("subset by",
+                                                           paste(subset_levels, collapse = ", ")
+                     ), "all data"),
                      sep = " - ")
 
   # Add the heatmap to the existing plot list
@@ -154,21 +170,170 @@ collect_heatmaps <- function(plot_list, data, col_factor,
 # initialize plot_list
 plot_list <- list()
 
+### planned heatmaps ###
+# options
+# plot_list <- collect_heatmaps(plot_list,
+#                               filtered_data,
+#                               col_factor,
+#                               clustering_distance_rows = "manhattan",
+#                               clustering_distance_cols = NULL,
+#                               subset_factor = "cell_background", subset_levels = c("dQ+EV", "Con"),
+#                               normalize = TRUE, normalize_factor = "GPCR",
+#                               cutree_rows = 5,
+#                               height = 15, width = 15)
+
 plot_list <- collect_heatmaps(plot_list,
                               filtered_data,
                               "FlAsH",
-                              normalize = TRUE, normalize_factor = "GPCR")
-
-
+                              clustering_distance_cols = NULL,
+                              normalize = TRUE, normalize_factor = "GPCR",
+                              cutree_rows = 10,
+                              height = 11, width = 11)
+plot_list <- collect_heatmaps(plot_list,
+                              filtered_data,
+                              "FlAsH",
+                              clustering_distance_cols = NULL,
+                              subset_factor = "cell_background", subset_levels = "dQ+EV",
+                              # normalize = TRUE, normalize_factor = "GPCR",
+                              cutree_rows = 3,
+                              height = 15, width = 15)
+plot_list <- collect_heatmaps(plot_list,
+                              filtered_data,
+                              "FlAsH",
+                              clustering_distance_cols = NULL,
+                              subset_factor = "cell_background", subset_levels = "dQ+GRK2",
+                              # normalize = TRUE, normalize_factor = "GPCR",
+                              cutree_rows = 3,
+                              height = 15, width = 15)
+plot_list <- collect_heatmaps(plot_list,
+                              filtered_data,
+                              "FlAsH",
+                              clustering_distance_cols = NULL,
+                              subset_factor = "cell_background", subset_levels = "dQ+GRK6",
+                              # normalize = TRUE, normalize_factor = "GPCR",
+                              cutree_rows = 3,
+                              height = 15, width = 15)
+plot_list <- collect_heatmaps(plot_list,
+                              filtered_data,
+                              "FlAsH",
+                              clustering_distance_cols = NULL,
+                              subset_factor = "cell_background", subset_levels = "Con",
+                              # normalize = TRUE, normalize_factor = "GPCR",
+                              cutree_rows = 3,
+                              height = 15, width = 15)
+plot_list <- collect_heatmaps(plot_list,
+                              filtered_data,
+                              "FlAsH",
+                              clustering_distance_cols = NULL,
+                              subset_factor = "cell_background", subset_levels = c("dQ+EV", "Con"),
+                              # normalize = TRUE, normalize_factor = "GPCR",
+                              cutree_rows = 3,
+                              height = 15, width = 15)
+plot_list <- collect_heatmaps(plot_list,
+                              filtered_data,
+                              "FlAsH",
+                              clustering_distance_cols = NULL,
+                              normalize = TRUE, normalize_factor = "bArr",
+                              subset_factor = "GPCR", subset_levels = "b2AR",
+                                                            cutree_rows = 3,
+                              height = 15, width = 15)
+plot_list <- collect_heatmaps(plot_list,
+                              filtered_data,
+                              "FlAsH",
+                              clustering_distance_cols = NULL,
+                              normalize = TRUE, normalize_factor = "bArr",
+                              subset_factor = "GPCR", subset_levels = "b2V2",
+                              cutree_rows = 3,
+                              height = 15, width = 15)
+plot_list <- collect_heatmaps(plot_list,
+                              filtered_data,
+                              "FlAsH",
+                              clustering_distance_cols = NULL,
+                              subset_factor = "GPCR", subset_levels = "V2b2",
+                              normalize = TRUE, normalize_factor = "bArr",
+                              cutree_rows = 3,
+                              height = 15, width = 15)
+plot_list <- collect_heatmaps(plot_list,
+                              filtered_data,
+                              "FlAsH",
+                              clustering_distance_cols = NULL,
+                              subset_factor = "GPCR", subset_levels = "V2R",
+                              normalize = TRUE, normalize_factor = "bArr",
+                              cutree_rows = 3,
+                              height = 15, width = 15)
+plot_list <- collect_heatmaps(plot_list,
+                              filtered_data,
+                              "FlAsH",
+                              clustering_distance_cols = NULL,
+                              subset_factor = "bArr", subset_levels = "bArr1",
+                              normalize = TRUE, normalize_factor = "GPCR",
+                              cutree_rows = 3,
+                              height = 15, width = 15)
+plot_list <- collect_heatmaps(plot_list,
+                              filtered_data,
+                              "FlAsH",
+                              clustering_distance_cols = NULL,
+                              subset_factor = "bArr", subset_levels = "bArr2",
+                              normalize = TRUE, normalize_factor = "GPCR",
+                              cutree_rows = 3,
+                              height = 15, width = 15)
+plot_list <- collect_heatmaps(plot_list,
+                              filtered_data[filtered_data$GPCR == "b2AR",],
+                              "FlAsH",
+                              clustering_distance_cols = NULL,
+                              subset_factor = "cell_background", subset_levels = "dQ+GRK2",
+                              # normalize = TRUE, normalize_factor = "bArr",
+                              # cutree_rows = 3,
+                              height = 15, width = 15)
+plot_list <- collect_heatmaps(plot_list,
+                              filtered_data[filtered_data$GPCR == "b2V2",],
+                              "FlAsH",
+                              clustering_distance_cols = NULL,
+                              subset_factor = "cell_background", subset_levels = "dQ+GRK6",
+                              # normalize = TRUE, normalize_factor = "bArr",
+                              # cutree_rows = 3,
+                              height = 15, width = 15)
+plot_list <- collect_heatmaps(plot_list,
+                              filtered_data[filtered_data$GPCR == "V2b2",],
+                              "FlAsH",
+                              clustering_distance_cols = NULL,
+                              subset_factor = "cell_background", subset_levels = "dQ+GRK2",
+                              # normalize = TRUE, normalize_factor = "bArr",
+                              # cutree_rows = 3,
+                              height = 15, width = 15)
+plot_list <- collect_heatmaps(plot_list,
+                              filtered_data[filtered_data$GPCR == "V2R",],
+                              "FlAsH",
+                              clustering_distance_cols = NULL,
+                              # subset_factor = "cell_background", subset_levels = c("dQ+GRK2", "dQ+GRK6"),
+                              # normalize = TRUE, normalize_factor = "bArr",
+                              cutree_rows = 3,
+                              height = 15, width = 15)
+plot_list <- collect_heatmaps(plot_list,
+                              filtered_data,
+                              "FlAsH",
+                              clustering_distance_cols = NULL,
+                              subset_factor = "cell_background", subset_levels = "dQ+GRK2",
+                              normalize = TRUE, normalize_factor = "GPCR",
+                              cutree_rows = 3,
+                              height = 15, width = 15)
+plot_list <- collect_heatmaps(plot_list,
+                              filtered_data,
+                              "FlAsH",
+                              clustering_distance_cols = NULL,
+                              subset_factor = "cell_background", subset_levels = "dQ+GRK6",
+                              # normalize = TRUE, normalize_factor = "GPCR",
+                              cutree_rows = 3,
+                              height = 15, width = 15)
 ### export plots
 folder_name <- c("231023_heatmaps")
 if (!dir.exists(folder_name)) {
   dir.create(folder_name)
 }
-setwd(paste0(getwd(), "/", folder_name, "/"))
+# setwd(paste0(getwd(), "/", folder_name, "/"))
 for (i in seq_along(plot_list)) {
   # file name based on the plot name
-  file_name <- paste0(names(plot_list)[i], ".png")
+  file_name <- paste0(names(plot_list)[i],"_", i, ".png")
   # Save the plot to a file
   ggsave(file_name, plot = plot_list[[i]],
          # width = 10,
