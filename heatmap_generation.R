@@ -83,11 +83,11 @@ draw_heatmap <- function(matrix_data,
   clustering_rows <- !is.null(clustering_distance_rows)
   clustering_cols <- !is.null(clustering_distance_cols)
 
-  # If cutree is not specified, set to zero
+  # If cutree is not specified, set to one
   if (is.na(cutree_rows)) cutree_rows <- 1
   if (is.na(cutree_cols)) cutree_cols <- 1
 
-# Construct title with clustering distances
+  # Construct title with clustering distances
   title <- paste("Heatmap (Row Dist:", clustering_distance_rows,
                  "& Col Dist:", clustering_distance_cols, ")")
 
@@ -108,40 +108,70 @@ draw_heatmap <- function(matrix_data,
 
 add_plot <- function(plot_list, new_plot, plot_name) {
   # Combine the existing list with the new plot
-  plot_list <<- append(plot_list, setNames(list(new_plot), plot_name))
-  return(invisible(plot_list))
+  updated_list <- append(plot_list, setNames(list(new_plot), plot_name))
+  return(updated_list)
+}
+
+collect_heatmaps <- function(plot_list, data, col_factor,
+                             normalize = FALSE, normalize_factor = NULL,
+                             subset_factor = NULL, subset_levels = NULL,
+                             clustering_distance_rows = "manhattan",
+                             clustering_distance_cols = "manhattan",
+                             cutree_rows = NA,
+                             cutree_cols = NA,
+                             display_numbers = FALSE,
+                             height = 8,
+                             width = 10,
+                             fontsize = 10) {
+  # Optionally normalize the data
+  if (normalize && !is.null(normalize_factor)) {
+    data <- normalize_by_factor(data, normalize_factor)
+  }
+
+  # Create the matrix
+  matrix_data <- create_matrix_from_factors(data, col_factor, subset_factor, subset_levels)
+
+  # Draw the heatmap
+  heatmap_plot <- draw_heatmap(matrix_data,
+                               clustering_distance_rows, clustering_distance_cols,
+                               cutree_rows, cutree_cols,
+                               display_numbers,
+                               height, width,
+                               fontsize)
+
+  # Create the plot name based on normalization and col_factor
+  plot_name <- paste(col_factor,
+                     ifelse(normalize, paste("normalized by", normalize_factor), "not normalized"),
+                     sep = " - ")
+
+  # Add the heatmap to the existing plot list
+  plot_list <- add_plot(plot_list, heatmap_plot, plot_name)
+  print(names(plot_list))
+
+  return(plot_list)
 }
 
 # initialize plot_list
 plot_list <- list()
 
-add_plot(plot_list,
-         draw_heatmap(
-           create_matrix_from_factors(
-             filtered_data, "FlAsH"
-           )
-         ),
-"all_data_flash")
-
-normalized_data <- normalize_by_factor(filtered_data, "GPCR")
-
-m2 <- create_matrix_from_factors(filtered_data,
-                                 "cell_background",
-                                 "GPCR",
-                                 c("V2R", "V2b2"))
-draw_heatmap(m2)
-
+plot_list <- collect_heatmaps(plot_list,
+                              filtered_data,
+                              "FlAsH",
+                              normalize = TRUE, normalize_factor = "GPCR")
 
 
 ### export plots
 folder_name <- c("231023_heatmaps")
 if (!dir.exists(folder_name)) {
-    dir.create(folder_name)
-  }
+  dir.create(folder_name)
+}
 setwd(paste0(getwd(), "/", folder_name, "/"))
 for (i in seq_along(plot_list)) {
   # file name based on the plot name
   file_name <- paste0(names(plot_list)[i], ".png")
   # Save the plot to a file
-  ggsave(file_name, plot = plot_list[[i]], width = 10, height = 7)
+  ggsave(file_name, plot = plot_list[[i]],
+         # width = 10,
+         # height = 7
+  )
 }
