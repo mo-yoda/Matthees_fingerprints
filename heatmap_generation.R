@@ -22,21 +22,28 @@ import_file <- "Filtered_SN_Master.xlsx"
 filtered_data <- readxl::read_xlsx(import_file)
 
 normalize_by_factor <- function(data, factor_name) {
-  # Calculate the minimum value of mean_signal for each level of the factor
-  min_values <- data %>%
-    dplyr::group_by(!!dplyr::sym(factor_name)) %>%
-    dplyr::summarise(min_signal = min(mean_signal, na.rm = TRUE))
+  # Calculate the minimum/maximum value of mean_signal for each level of the factor
+  # if normalized data is normalized again, norm to max value, else to min
+  if (!max(data$mean_signal) == 1) {
+    max_values <- data %>%
+      dplyr::group_by(!!dplyr::sym(factor_name)) %>%
+      dplyr::summarise(max_signal = min(mean_signal, na.rm = TRUE))
+  } else {
+    max_values <- data %>%
+      dplyr::group_by(!!dplyr::sym(factor_name)) %>%
+      dplyr::summarise(max_signal = max(mean_signal, na.rm = TRUE))
+  }
 
-  # Join the min_values with the main data
+  # Join the min/max_values with the main data
   data <- data %>%
-    dplyr::left_join(min_values, by = factor_name)
+    dplyr::left_join(max_values, by = factor_name)
 
   # Normalize the mean_signal by dividing it by min_signal
   data <- data %>%
-    dplyr::mutate(normalized_signal = mean_signal / min_signal)
+    dplyr::mutate(normalized_signal = mean_signal / max_signal)
 
   # Drop the min_signal column as it's no longer needed
-  # data$min_signal <- NULL
+  # data$max_signal <- NULL
 
   return(data)
 }
@@ -127,7 +134,8 @@ collect_heatmaps <- function(plot_list, data, col_factor,
                              display_numbers = FALSE,
                              height = 20,
                              width = 20,
-                             fontsize = 10) {
+                             fontsize = 10,
+                             notes = NULL) {
   # Optionally subset the data
   if (!is.null(subset_factor) && !is.null(subset_levels)) {
     data <- dplyr::filter(data, !!sym(subset_factor) %in% subset_levels)
@@ -153,12 +161,16 @@ collect_heatmaps <- function(plot_list, data, col_factor,
 
   # Create the plot name based on normalization and col_factor
   plot_name <- paste(col_factor,
+                     # if only a subset of GPCRs is used as input, display this is plot name
                      if (!subset_factor == "GPCR" && !length(levels(as.factor(data$GPCR))) == 4)
-                       paste("only ", levels(as.factor(data$GPCR)), collapse = ", "),
+                       paste("only", levels(as.factor(data$GPCR)), collapse = ", "),
+                     # include normalization in plot name
                      ifelse(normalize, paste("norm by", normalize_factor), "not norm"),
+                     # include subset in plot name
                      ifelse(!is.null(subset_factor), paste("subset by",
                                                            paste(subset_levels, collapse = ", ")
                      ), "all data"),
+                     if (!is.null(notes)) notes,
                      sep = "_")
 
   # Add the heatmap to the existing plot list
@@ -183,13 +195,20 @@ plot_list <- list()
 #                               cutree_rows = 5,
 #                               height = 15, width = 15)
 
+norm_GPCR_data <- normalize_by_factor(filtered_data, "GPCR")
+norm_GPCR_data$mean_signal <- norm_GPCR_data$normalized_signal
+norm_GPCR_data$max_signal <- NULL
+norm_GPCR_data$normalized_signal <- NULL
+
 plot_list <- collect_heatmaps(plot_list,
-                              filtered_data,
+                              norm_GPCR_data,
                               "FlAsH",
                               clustering_distance_cols = NULL,
-                              normalize = TRUE, normalize_factor = "GPCR",
-                              cutree_rows = 10,
-                              height = 11, width = 11)
+                              normalize = TRUE, normalize_factor = "bArr",
+                              # cutree_rows = 10,
+                              height = 11, width = 11,
+                              notes = "norm_GPCR_data")
+
 plot_list <- collect_heatmaps(plot_list,
                               filtered_data,
                               "FlAsH",
