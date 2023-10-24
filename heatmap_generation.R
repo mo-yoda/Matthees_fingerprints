@@ -162,8 +162,10 @@ collect_heatmaps <- function(plot_list, data, col_factor,
   # Create the plot name based on normalization and col_factor
   plot_name <- paste(col_factor,
                      # if only a subset of GPCRs is used as input, display this is plot name
-                     if (!subset_factor == "GPCR" && !length(levels(as.factor(data$GPCR))) == 4)
-                       paste("only", levels(as.factor(data$GPCR)), collapse = ", "),
+                     if (!is.null(subset_factor) &&
+                       !subset_factor == "GPCR" &&
+                       !length(levels(as.factor(data$GPCR))) == 4)
+                       paste("only ", paste(levels(as.factor(data$GPCR)), collapse = ", ")),
                      # include normalization in plot name
                      ifelse(normalize, paste("norm by", normalize_factor), "not norm"),
                      # include subset in plot name
@@ -195,6 +197,7 @@ plot_list <- list()
 #                               cutree_rows = 5,
 #                               height = 15, width = 15)
 
+# all data heatmap, norm to GPCR and bArr
 norm_GPCR_data <- normalize_by_factor(filtered_data, "GPCR")
 norm_GPCR_data$mean_signal <- norm_GPCR_data$normalized_signal
 norm_GPCR_data$max_signal <- NULL
@@ -205,152 +208,122 @@ plot_list <- collect_heatmaps(plot_list,
                               "FlAsH",
                               clustering_distance_cols = NULL,
                               normalize = TRUE, normalize_factor = "bArr",
-                              # cutree_rows = 10,
+                              cutree_rows = 10,
                               height = 11, width = 11,
                               notes = "norm_GPCR_data")
 
+# GRKs separate, norm to GPCR and bArr
+subset_temp <- c("dQ+GRK2", "dQ+GRK6")
+for (level in subset_temp){
+  plot_list <- collect_heatmaps(plot_list,
+                              norm_GPCR_data,
+                              "FlAsH",
+                              clustering_distance_cols = NULL,
+                              subset_factor = "cell_background", subset_levels = level,
+                              normalize = TRUE, normalize_factor = "bArr",
+                              cutree_rows = 5,
+                              height = 11, width = 11,
+                              notes = "norm_GPCR_data")
+}
+
+# all data heatmap, norm to GPCR only
 plot_list <- collect_heatmaps(plot_list,
                               filtered_data,
                               "FlAsH",
                               clustering_distance_cols = NULL,
-                              subset_factor = "cell_background", subset_levels = "dQ+EV",
-                              # normalize = TRUE, normalize_factor = "GPCR",
-                              cutree_rows = 3,
-                              height = 15, width = 15)
-plot_list <- collect_heatmaps(plot_list,
-                              filtered_data,
-                              "FlAsH",
-                              clustering_distance_cols = NULL,
-                              subset_factor = "cell_background", subset_levels = "dQ+GRK2",
-                              # normalize = TRUE, normalize_factor = "GPCR",
-                              cutree_rows = 3,
-                              height = 15, width = 15)
-plot_list <- collect_heatmaps(plot_list,
-                              filtered_data,
-                              "FlAsH",
-                              clustering_distance_cols = NULL,
-                              subset_factor = "cell_background", subset_levels = "dQ+GRK6",
-                              # normalize = TRUE, normalize_factor = "GPCR",
-                              cutree_rows = 3,
-                              height = 15, width = 15)
-plot_list <- collect_heatmaps(plot_list,
-                              filtered_data,
-                              "FlAsH",
-                              clustering_distance_cols = NULL,
-                              subset_factor = "cell_background", subset_levels = "Con",
-                              # normalize = TRUE, normalize_factor = "GPCR",
-                              cutree_rows = 3,
-                              height = 15, width = 15)
-plot_list <- collect_heatmaps(plot_list,
-                              filtered_data,
-                              "FlAsH",
-                              clustering_distance_cols = NULL,
-                              subset_factor = "cell_background", subset_levels = c("dQ+EV", "Con"),
-                              # normalize = TRUE, normalize_factor = "GPCR",
-                              cutree_rows = 3,
-                              height = 15, width = 15)
+                              normalize = TRUE, normalize_factor = "GPCR",
+                              cutree_rows = 10,
+                              height = 11, width = 11)
+# all data heatmap, norm to bArr only
 plot_list <- collect_heatmaps(plot_list,
                               filtered_data,
                               "FlAsH",
                               clustering_distance_cols = NULL,
                               normalize = TRUE, normalize_factor = "bArr",
-                              subset_factor = "GPCR", subset_levels = "b2AR",
-                              cutree_rows = 3,
-                              height = 15, width = 15)
-plot_list <- collect_heatmaps(plot_list,
-                              filtered_data,
-                              "FlAsH",
-                              clustering_distance_cols = NULL,
-                              normalize = TRUE, normalize_factor = "bArr",
-                              subset_factor = "GPCR", subset_levels = "b2V2",
-                              cutree_rows = 3,
-                              height = 15, width = 15)
-plot_list <- collect_heatmaps(plot_list,
-                              filtered_data,
-                              "FlAsH",
-                              clustering_distance_cols = NULL,
-                              subset_factor = "GPCR", subset_levels = "V2b2",
-                              normalize = TRUE, normalize_factor = "bArr",
-                              cutree_rows = 3,
-                              height = 15, width = 15)
-plot_list <- collect_heatmaps(plot_list,
-                              filtered_data,
-                              "FlAsH",
-                              clustering_distance_cols = NULL,
-                              subset_factor = "GPCR", subset_levels = "V2R",
-                              normalize = TRUE, normalize_factor = "bArr",
-                              cutree_rows = 3,
-                              height = 15, width = 15)
+                              cutree_rows = 10,
+                              height = 11, width = 11)
+# all bArr1 data, norm to GPCR
 plot_list <- collect_heatmaps(plot_list,
                               filtered_data,
                               "FlAsH",
                               clustering_distance_cols = NULL,
                               subset_factor = "bArr", subset_levels = "bArr1",
                               normalize = TRUE, normalize_factor = "GPCR",
-                              cutree_rows = 3,
-                              height = 15, width = 15)
+                              cutree_rows = 4,
+                              height = 14, width = 14)
+# all bArr2 data, norm to GPCR
 plot_list <- collect_heatmaps(plot_list,
                               filtered_data,
                               "FlAsH",
                               clustering_distance_cols = NULL,
                               subset_factor = "bArr", subset_levels = "bArr2",
                               normalize = TRUE, normalize_factor = "GPCR",
-                              cutree_rows = 3,
-                              height = 15, width = 15)
-plot_list <- collect_heatmaps(plot_list,
-                              filtered_data[filtered_data$GPCR == "b2AR",],
-                              "FlAsH",
-                              clustering_distance_cols = NULL,
-                              subset_factor = "cell_background", subset_levels = "dQ+GRK2",
-                              # normalize = TRUE, normalize_factor = "bArr",
-                              # cutree_rows = 3,
-                              height = 15, width = 15)
-plot_list <- collect_heatmaps(plot_list,
-                              filtered_data[filtered_data$GPCR == "b2V2",],
-                              "FlAsH",
-                              clustering_distance_cols = NULL,
-                              subset_factor = "cell_background", subset_levels = "dQ+GRK6",
-                              # normalize = TRUE, normalize_factor = "bArr",
-                              # cutree_rows = 3,
-                              height = 15, width = 15)
-plot_list <- collect_heatmaps(plot_list,
-                              filtered_data[filtered_data$GPCR == "V2b2",],
-                              "FlAsH",
-                              clustering_distance_cols = NULL,
-                              subset_factor = "cell_background", subset_levels = "dQ+GRK2",
-                              # normalize = TRUE, normalize_factor = "bArr",
-                              # cutree_rows = 3,
-                              height = 15, width = 15)
-plot_list <- collect_heatmaps(plot_list,
-                              filtered_data[filtered_data$GPCR == "V2R",],
-                              "FlAsH",
-                              clustering_distance_cols = NULL,
-                              # subset_factor = "cell_background", subset_levels = c("dQ+GRK2", "dQ+GRK6"),
-                              # normalize = TRUE, normalize_factor = "bArr",
-                              cutree_rows = 3,
-                              height = 15, width = 15)
-plot_list <- collect_heatmaps(plot_list,
+                              cutree_rows = 4,
+                              height = 14, width = 14)
+
+# separate for each cell_background, norm to GPCR
+subset_temp <- levels(as.factor(filtered_data$cell_background))
+for (level in subset_temp){
+  plot_list <- collect_heatmaps(plot_list,
                               filtered_data,
                               "FlAsH",
                               clustering_distance_cols = NULL,
-                              subset_factor = "cell_background", subset_levels = "dQ+GRK2",
+                              subset_factor = "cell_background", subset_levels = level,
                               normalize = TRUE, normalize_factor = "GPCR",
-                              cutree_rows = 3,
-                              height = 15, width = 15)
-plot_list <- collect_heatmaps(plot_list,
-                              filtered_data,
+                              cutree_rows = 4,
+                              height = 14, width = 14)
+}
+
+# seperate for each GPCR, not normalised
+subset_temp <- levels(as.factor(filtered_data$GPCR))
+for (level in subset_temp){
+  plot_list <- collect_heatmaps(plot_list,
+                              filtered_data[filtered_data$GPCR == level,],
                               "FlAsH",
                               clustering_distance_cols = NULL,
-                              subset_factor = "cell_background", subset_levels = "dQ+GRK6",
-                              # normalize = TRUE, normalize_factor = "GPCR",
+                              # subset_factor = "cell_background", subset_levels = "dQ+GRK2",
+                              # normalize = TRUE, normalize_factor = "bArr",
                               cutree_rows = 3,
                               height = 15, width = 15)
+}
+
+# seperate for each GPCR, dQ + Con
+subset_temp <- levels(as.factor(filtered_data$GPCR))
+for (level in subset_temp){
+  for (level2 in subset_temp2){
+      plot_list <- collect_heatmaps(plot_list,
+                              filtered_data[filtered_data$GPCR == level,],
+                              "FlAsH",
+                              clustering_distance_cols = NULL,
+                              subset_factor = "cell_background", subset_levels = c("dQ+EV", "Con"),
+                              # normalize = TRUE, normalize_factor = "bArr",
+                              # cutree_rows = 3,
+                              height = 15, width = 15)
+  }
+
+}
+# seperate for each GPCR, norm to bArr
+subset_temp <- levels(as.factor(filtered_data$GPCR))
+for (level in subset_temp){
+  for (level2 in subset_temp2){
+      plot_list <- collect_heatmaps(plot_list,
+                              filtered_data[filtered_data$GPCR == level,],
+                              "FlAsH",
+                              clustering_distance_cols = NULL,
+                              subset_factor = "cell_background", subset_levels = c("dQ+EV", "Con"),
+                              normalize = TRUE, normalize_factor = "bArr",
+                              # cutree_rows = 3,
+                              height = 15, width = 15)
+  }
+
+}
+
 ### export plots
 folder_name <- c("231023_heatmaps")
 if (!dir.exists(folder_name)) {
   dir.create(folder_name)
 }
-# setwd(paste0(getwd(), "/", folder_name, "/"))
+setwd(paste0(getwd(), "/", folder_name, "/"))
 for (i in seq_along(plot_list)) {
   # file name based on the plot name
   file_name <- paste0(i, "_", names(plot_list)[i], ".png")
