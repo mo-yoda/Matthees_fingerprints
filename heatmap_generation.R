@@ -91,11 +91,10 @@ draw_heatmap <- function(matrix_data,
   # Construct title with clustering distances
   if (!is.null(clustering_distance_rows) && !is.null(clustering_distance_cols)) {
     title <- paste("Row Dist:", clustering_distance_rows,
-                 "& Col Dist:", clustering_distance_cols)
+                   "& Col Dist:", clustering_distance_cols)
   }
   if (!is.null(clustering_distance_rows)) title <- paste("Row Dist:", clustering_distance_rows)
   if (!is.null(clustering_distance_cols)) title <- paste("Row Dist:", clustering_distance_cols)
-
 
   pheatmap(matrix_data,
            clustering_distance_rows = clustering_distance_rows,
@@ -129,7 +128,7 @@ collect_heatmaps <- function(plot_list, data, col_factor,
                              height = 20,
                              width = 20,
                              fontsize = 10) {
-# Optionally subset the data
+  # Optionally subset the data
   if (!is.null(subset_factor) && !is.null(subset_levels)) {
     data <- dplyr::filter(data, !!sym(subset_factor) %in% subset_levels)
   }
@@ -235,7 +234,7 @@ plot_list <- collect_heatmaps(plot_list,
                               clustering_distance_cols = NULL,
                               normalize = TRUE, normalize_factor = "bArr",
                               subset_factor = "GPCR", subset_levels = "b2AR",
-                                                            cutree_rows = 3,
+                              cutree_rows = 3,
                               height = 15, width = 15)
 plot_list <- collect_heatmaps(plot_list,
                               filtered_data,
@@ -333,7 +332,7 @@ if (!dir.exists(folder_name)) {
 # setwd(paste0(getwd(), "/", folder_name, "/"))
 for (i in seq_along(plot_list)) {
   # file name based on the plot name
-  file_name <- paste0(names(plot_list)[i],"_", i, ".png")
+  file_name <- paste0(i, "_", names(plot_list)[i], ".png")
   # Save the plot to a file
   ggsave(file_name, plot = plot_list[[i]],
          # width = 10,
