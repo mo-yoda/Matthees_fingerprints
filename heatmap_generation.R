@@ -153,11 +153,13 @@ collect_heatmaps <- function(plot_list, data, col_factor,
 
   # Create the plot name based on normalization and col_factor
   plot_name <- paste(col_factor,
+                     if (!subset_factor == "GPCR" && !length(levels(as.factor(data$GPCR))) == 4)
+                       paste("only ", levels(as.factor(data$GPCR)), collapse = ", "),
                      ifelse(normalize, paste("norm by", normalize_factor), "not norm"),
                      ifelse(!is.null(subset_factor), paste("subset by",
                                                            paste(subset_levels, collapse = ", ")
                      ), "all data"),
-                     sep = " - ")
+                     sep = "_")
 
   # Add the heatmap to the existing plot list
   plot_list <- add_plot(plot_list, heatmap_plot, plot_name)
