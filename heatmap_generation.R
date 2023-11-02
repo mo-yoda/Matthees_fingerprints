@@ -133,7 +133,7 @@ add_plot <- function(plot_list, new_plot, plot_name) {
 collect_heatmaps <- function(plot_list, data, col_factor,
                              normalize = FALSE, normalize_factor = NULL,
                              subset_factor = NULL, subset_levels = NULL,
-                             factor_order,
+                             factor_order  = NULL,
                              clustering_distance_rows = "manhattan",
                              clustering_distance_cols = "manhattan",
                              cutree_rows = NA,
@@ -230,7 +230,7 @@ plot_list <- collect_heatmaps(plot_list,
 
 # separate for each cell_background, norm to GPCR and bArr
 GRK_conditions <- levels(as.factor(filtered_data$cell_background))
-for (level in GRK_conditions) {
+for (level in GRK_conditions[3:4]) {
   plot_list <- collect_heatmaps(plot_list,
                                 norm_GPCR_data,
                                 "FlAsH",
@@ -349,8 +349,10 @@ for (level in GPCRs) {
                                        height = 15, width = 15)
 }
 # suppl. for Erk: separate for each core, only Con/dQ, norm to GPCR
+# ERROR -> subset to core does is the problem, not figured out yet
 figure_plot_list <- collect_heatmaps(figure_plot_list,
-                                     filtered_data[filtered_data$GPCR == c("b2AR", "b2V2"),],
+                                     filtered_data,
+                                     # filtered_data[filtered_data$GPCR == c("b2AR", "b2V2"),],
                                      "FlAsH",
                                      subset_factor = "cell_background", subset_levels = c("dQ+EV", "Con"),
                                      normalize = TRUE, normalize_factor = "GPCR",
@@ -392,6 +394,7 @@ export_plot_list <- function(plot_list, folder_name) {
     )
   }
 }
-
+setwd(path)
 export_plot_list(plot_list, folder_name = "231102_heatmaps")
+setwd(path)
 export_plot_list(figure_plot_list, folder_name = "231102_figure_heatmaps")
