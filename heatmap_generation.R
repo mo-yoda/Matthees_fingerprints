@@ -189,6 +189,14 @@ collect_heatmaps <- function(plot_list, data, col_factor,
   return(plot_list)
 }
 
+# export non-normalised matrix
+sensor_order <- c("FlAsH2", "FlAsH3", "FlAsH4", "FlAsH5", "FlAsH7", "FlAsH9", "FlAsH10", "FlAsH1")
+flash_matrix <- create_matrix_from_factors(filtered_data,
+                                           col_factor = "FlAsH",
+                                           factor_order = sensor_order)
+flash_matrix <- cbind("Factors"=rownames(flash_matrix), flash_matrix)
+write_xlsx(flash_matrix, "Matrix_notnorm.xlsx")
+
 # initialize plot_list
 plot_list <- list()
 
@@ -203,7 +211,6 @@ plot_list <- list()
 #                               normalize = TRUE, normalize_factor = "GPCR",
 #                               cutree_rows = 5,
 #                               height = 15, width = 15)
-sensor_order <- c("FlAsH2", "FlAsH3", "FlAsH4", "FlAsH5", "FlAsH7", "FlAsH9", "FlAsH10", "FlAsH1")
 
 # all data heatmap, norm to GPCR and bArr
 norm_GPCR_data <- normalize_by_factor(filtered_data, "GPCR")
