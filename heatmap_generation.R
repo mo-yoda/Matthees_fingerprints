@@ -1,4 +1,4 @@
-###create needed environment with loading packages
+### create needed environment with loading packages
 wants <- c("openxlsx",
            "dplyr",
            "tidyr",
@@ -14,11 +14,11 @@ lapply(wants, require, character.only = TRUE)
 # tower PC path
 path <- r"(C:\Users\monar\Google Drive\Arbeit\homeoffice\231119_EM_PROGRAM_newdata)"
 # laptop path
-path <- r"(C:\Users\marli\Desktop\231119_EM_PROGRAM_newdata)"
+# path <- r"(C:\Users\marli\Desktop\231119_EM_PROGRAM_newdata)"
 setwd(path)
 
 # Load data
-import_file <- "Filtered_SN_Master.xlsx"
+import_file <- "EC50_-3 to 0,3_Filtered_SN_Master.xlsx"
 filtered_data <- readxl::read_xlsx(import_file)
 
 normalize_by_factor <- function(data, factor_name) {
@@ -399,6 +399,6 @@ export_plot_list <- function(plot_list, folder_name) {
   }
 }
 setwd(path)
-export_plot_list(plot_list, folder_name = "231102_heatmaps")
+export_plot_list(plot_list, folder_name = "231129_heatmaps")
 setwd(path)
-export_plot_list(figure_plot_list, folder_name = "231102_figure_heatmaps")
+export_plot_list(figure_plot_list, folder_name = "231129_figure_heatmaps")
