@@ -370,7 +370,6 @@ figure_plot_list <- collect_heatmaps(figure_plot_list,
                                      factor_order = sensor_order,
                                      # cutree_rows = 3,
                                      height = 15, width = 15)
-
 # main after Erk: all GPCRs, both bArr, GRK2 + 6 only; no norm
 figure_plot_list <- collect_heatmaps(figure_plot_list,
                                      filtered_data,
@@ -381,6 +380,36 @@ figure_plot_list <- collect_heatmaps(figure_plot_list,
                                      factor_order = sensor_order,
                                      # cutree_rows = 3,
                                      height = 15, width = 15)
+
+### 231129
+# separate for dQ or Con, only one bArr, norm to GPCR
+for (level in GRK_conditions[1:2]) {
+  plot_list <- collect_heatmaps(plot_list,
+                                filtered_data[filtered_data$bArr == "bArr2",],
+                                "FlAsH",
+                                clustering_distance_cols = NULL,
+                                clustering_distance_rows = "canberra",
+                                subset_factor = "cell_background", subset_levels = level,
+                                normalize = TRUE, normalize_factor = "GPCR",
+                                factor_order = sensor_order,
+                                # cutree_rows = 5,
+                                height = 11, width = 11,
+                                notes = "test_231129")
+}
+
+### 240124
+# separate for GRK2 and GRK6, all GPCRs, all bArr, no norm
+for (level in GRK_conditions[3:4]) {
+  figure_plot_list <- collect_heatmaps(figure_plot_list,
+                                filtered_data,
+                                "FlAsH",
+                                clustering_distance_cols = NULL,
+                                subset_factor = "cell_background", subset_levels = level,
+                                # normalize = TRUE, normalize_factor = "bArr",
+                                factor_order = sensor_order,
+                                # cutree_rows = 5,
+                                height = 11, width = 11)
+}
 
 ### export plots
 export_plot_list <- function(plot_list, folder_name) {
@@ -401,4 +430,4 @@ export_plot_list <- function(plot_list, folder_name) {
 setwd(path)
 export_plot_list(plot_list, folder_name = "231129_heatmaps")
 setwd(path)
-export_plot_list(figure_plot_list, folder_name = "231129_figure_heatmaps")
+export_plot_list(figure_plot_list, folder_name = "240124_figure_heatmaps")
