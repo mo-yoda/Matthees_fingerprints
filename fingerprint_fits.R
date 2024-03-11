@@ -169,6 +169,8 @@ setwd(paste0(getwd(), "/start_normalised"))
 fit_pars <- process_dataset(data)
 
 ### Check fit parameter distribution
+# add a column containing the absolute Hill slope
+fit_pars$absolute_Hill_slope <- abs(fit_pars$Hill_slope)
 
 # Function to extract outliers
 extract_outliers <- function(data, column_name, use_log10 = FALSE) {
@@ -263,7 +265,6 @@ add_outlier_columns <- function(fit_pars, outliers_list) {
 
 # List of outlier experiments for each parameter
 outliers_list <- list(
-  ### --> for Hill_slope = 1
   outliers_HS,
   c(outliers_V2EC50, outliers_b2EC50),
   c(outliers_V2EC50, outliers_logb2EC50))
