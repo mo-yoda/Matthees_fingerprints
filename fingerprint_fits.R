@@ -54,7 +54,7 @@ create_base_plot <- function(curr_data, experiment, fit_attempt = NULL) {
     labs(x = "Ligand Concentration", y = "Signal",
          title = experiment,
          subtitle = subtitle_text) +
-    theme_minimal()
+    theme_classic()
 }
 
 # Function to add fit line to the plot
