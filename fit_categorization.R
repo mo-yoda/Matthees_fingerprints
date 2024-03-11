@@ -271,7 +271,7 @@ create_xy_plot <- function(data, x_col, y_col, factor1 = NULL, factor2 = NULL,
   # Enhance plot
   unique_gpcr <- paste(unique(data$GPCR), collapse = ", ")
   p <- p +
-    theme_minimal(base_size = 15) +  # Increase base font size
+    theme_linedraw(base_size = 15) +  # Increase base font size
     labs(
       title = paste("Scatter plot of", quo_name(x_col), "versus", quo_name(y_col),
                     "for GPCRs:", unique_gpcr),
