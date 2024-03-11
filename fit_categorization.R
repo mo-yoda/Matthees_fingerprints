@@ -287,19 +287,12 @@ create_xy_plot <- function(data, x_col, y_col, factor1 = NULL, factor2 = NULL,
 # 2x warnings if axis limits exclude some data points:
 # trans$transform(limits) : NaNs produced
 # Warning: Removed XX rows containing missing values (`geom_point()`).
-create_xy_plot(merged_data,
-               "EC50", "Hill_slope",
-               "conc_dep", "critical",
-               x_range = c(-5, 300),
-               log_x = TRUE)
-create_xy_plot(merged_data,
-               "EC50", "Hill_slope",
-               "conc_dep", "critical",
-               x_range = c(-5, 300),
-               log_x = TRUE,
-               log_y = TRUE)
 
 ### used 2D plots ###
+# add core factor to df
+merged_data <- merged_data %>%
+  mutate(core = if_else(str_starts(GPCR, "V2"), "V2", "b2"))
+
 # 12 points not visible as log10(EC50) > 300
 add_plot(plot_list,
          create_xy_plot(merged_data,
@@ -309,6 +302,14 @@ add_plot(plot_list,
                         log_x = TRUE,
                         log_y = TRUE),
          "logEC50_logabsHS_all_data")
+add_plot(plot_list,
+         create_xy_plot(merged_data,
+                        "EC50", "absolute_Hill_slope",
+                        "core",
+                        x_range = c(-5, 300),
+                        log_x = TRUE,
+                        log_y = TRUE),
+         "logEC50_logabsHS_all_data_core")
 
 add_plot(plot_list,
          create_xy_plot(merged_data,
