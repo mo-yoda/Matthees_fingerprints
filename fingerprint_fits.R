@@ -22,8 +22,6 @@ fit_data <- function(curr_data) {
         logDose = 10, # as provided ligand conc are in log10
         robust = 'mean',
         na.action = 'na.omit',
-        ### --> for Hill_slope = 1, use line below + comment LL.4
-        # fct = LL.3(names = c("Min", "Max", "EC50"))
         fct = LL.4(names = c("Hill slope", "Min", "Max", "EC50"))
     )
   }, error = function(e) {
@@ -38,12 +36,10 @@ create_base_plot <- function(curr_data, experiment, fit_attempt = NULL) {
 
   # If fit_attempt is provided, extract the Hill_slope and EC50 values
   if (!is.null(fit_attempt)) {
-    ### --> for Hill_slope = 1, comment line below
     hill_slope_value <- fit_attempt$fit$par[1]
     ec50_value <- fit_attempt$fit$par[length(fit_attempt$fit$par)]
 
     subtitle_text <- paste(
-      ### --> for Hill_slope = 1, comment line below
       "Hill Slope:", round(hill_slope_value, 3),
       "EC50:", round(ec50_value, 3))
   }
@@ -65,7 +61,7 @@ create_base_plot <- function(curr_data, experiment, fit_attempt = NULL) {
 add_fit_line <- function(plot, fit_attempt, curr_data) {
   # Get x-values to predict y from
   lig_range <- unique(curr_data$ligand_conc)
-  # Create smaller intervalls of x values fo rsmoother line
+  # Create smaller intervalls of x values for smoother line
   lig_predict <- data.frame(ligand_conc = seq(min(lig_range),
                                               max(lig_range),
                                               0.1))
@@ -89,7 +85,6 @@ extract_fit_pars <- function(fit_attempt, curr_data, experiment) {
 
   data.frame(
     experiment = experiment,
-    ### --> for Hill_slope = 1, comment line below
     Hill_slope = fit_attempt$fit$par[1],
     EC50 = fit_attempt$fit$par[length(fit_attempt$fit$par)],
     RMSE = rmse_value,
@@ -164,26 +159,16 @@ setwd(path)
 import_file <- "Master_reformat.xlsx"
 data <- readxl::read_xlsx(import_file)
 
-# create folders for normalised and non-normalised data
-folder_names <- c("start_normalised",
-                  "start_normalised_HS_constrain",
-                  "non_normalised",
-                  "non_normalised_HS_constrain")
-for (folder_name in folder_names) {
-  if (!dir.exists(folder_name)) {
-    dir.create(folder_name)
+# create folders for start normalised
+if (!dir.exists("start_normalised")) {
+    dir.create("start_normalised")
   }
-}
+setwd(paste0(getwd(), "/start_normalised"))
 
 # Call the main function
-if (str_detect(import_file, "SN")) {
-  setwd(paste0(getwd(), "/start_normalised"))
-} else {
-  setwd(paste0(getwd(), "/non_normalised"))
-}
 fit_pars <- process_dataset(data)
 
-### Fit parameter analysis
+### Check fit parameter distribution
 
 # Function to extract outliers
 extract_outliers <- function(data, column_name, use_log10 = FALSE) {
@@ -230,21 +215,10 @@ remove_outliers <- function(data, outliers) {
   return(non_outlier_data)
 }
 
-### --> for Hill_slope = 1, comment line below
 # Hill Slope outliers
 outliers_HS <- extract_outliers(fit_pars, "Hill_slope")
 # bounds are -3.255 and 5.432
 # 33 outliers
-
-# RMSE outliers
-outliers_RMSE <- extract_outliers(fit_pars, "RMSE")
-# bounds are -6.47 and 28.922
-# 11 outliers
-
-# MAE outliers
-outliers_MAE <- extract_outliers(fit_pars, "MAE")
-# bounds are -4.33 and 22.486
-# 7 outliers
 
 # EC50 outliers have to be detected separately for each core
 b2_pars <- fit_pars[str_starts(fit_pars$experiment, "b2"),]
@@ -270,11 +244,6 @@ outliers_logV2EC50 <- extract_outliers(V2_pars, "EC50", use_log10 = TRUE)
 
 boxplot(fit_pars$Hill_slope)
 
-b2_no_outliers <- remove_outliers(b2_pars, outliers_b2EC50)
-V2_no_outliers <- remove_outliers(V2_pars, outliers_V2EC50)
-boxplot(b2_no_outliers$EC50)
-boxplot(V2_no_outliers$EC50)
-
 # Function to add logical "_outlier" columns to fit_pars
 add_outlier_columns <- function(fit_pars, outliers_list) {
 
@@ -297,16 +266,12 @@ outliers_list <- list(
   ### --> for Hill_slope = 1
   outliers_HS,
   c(outliers_V2EC50, outliers_b2EC50),
-  c(outliers_V2EC50, outliers_logb2EC50),
-  outliers_RMSE,
-  outliers_MAE)
+  c(outliers_V2EC50, outliers_logb2EC50))
 names(outliers_list) <- c(
   ### --> for Hill_slope = 1
   "Hill_slope",
   "EC50",
-  "logEC50",
-  "RMSE",
-  "MAE")
+  "logEC50")
 
 # Add "_outlier" columns to fit_pars
 fit_pars <- add_outlier_columns(fit_pars, outliers_list)
