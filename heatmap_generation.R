@@ -18,7 +18,7 @@ path <- r"(C:\Users\monar\Google Drive\Arbeit\homeoffice\231119_EM_PROGRAM_newda
 setwd(path)
 
 # Load data
-import_file <- "EC50_-3 to 0,3_Filtered_SN_Master.xlsx"
+import_file <- "Filtered_SN_Master.xlsx"
 filtered_data <- readxl::read_xlsx(import_file)
 
 normalize_by_factor <- function(data, factor_name) {
@@ -195,7 +195,7 @@ flash_matrix <- create_matrix_from_factors(filtered_data,
                                            col_factor = "FlAsH",
                                            factor_order = sensor_order)
 flash_matrix <- cbind("Factors" = rownames(flash_matrix), flash_matrix)
-write_xlsx(flash_matrix, "Matrix_notnorm.xlsx")
+write_xlsx(flash_matrix, "Matrix_SN.xlsx")
 
 # initialize plot_list
 plot_list <- list()
@@ -428,6 +428,6 @@ export_plot_list <- function(plot_list, folder_name) {
   }
 }
 setwd(path)
-export_plot_list(plot_list, folder_name = "231129_heatmaps")
+export_plot_list(plot_list, folder_name = "240312_heatmaps")
 setwd(path)
-export_plot_list(figure_plot_list, folder_name = "240124_figure_heatmaps")
+export_plot_list(figure_plot_list, folder_name = "240312_figure_heatmaps")
