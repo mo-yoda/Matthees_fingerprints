@@ -83,6 +83,41 @@ create_matrix_from_factors <- function(data, col_factor,
 
 }
 
+create_colors_and_breaks <- function(matrix_data) {
+  # Determine the range of your data
+  min_value <- min(matrix_data, na.rm = TRUE)
+  max_value <- max(matrix_data, na.rm = TRUE)
+
+  # Adjust these numbers based on your specific needs
+  num_colors_below_zero <- 100
+  num_colors_above_zero_to_two <- 100
+
+
+  # Define breaks with very small intervals around 0
+  breaks <- c(min_value,
+              seq(min_value, -1e-10, length.out = num_colors_below_zero + 1)[-1],
+              -1e-10, 1e-10,  # Small interval around 0
+              seq(1e-10, 2, length.out = num_colors_above_zero_to_two + 1)[-1],
+              max_value)
+  breaks <- unique(breaks)  # Ensure breaks are unique
+  print(breaks)
+
+  # Define colors
+  colors_below_zero <- colorRampPalette(c("#0000FF", "#FF0000"))(num_colors_below_zero) # Gradient for < 0
+  colors_above_zero_to_two <- colorRampPalette(c("#FFFFFF", "#8FFFC1"))(num_colors_above_zero_to_two) # Gradient for 0 < x <= 2
+  nonResponderColor <- "#787878" # Color for the very small interval around 0
+  colors_above_two <- "#8FFFC1" # Color for x > 2
+
+  # Assemble the color vector
+  colors <- c(colors_below_zero, nonResponderColor, colors_above_zero_to_two, colors_above_two)
+  print(breaks)
+  print(length(breaks))
+  print(length(colors))
+
+  # Return the colors and breaks
+  return(list(colors = colors, breaks = breaks))
+}
+
 draw_heatmap <- function(matrix_data,
                          clustering_distance_rows = "manhattan",
                          clustering_distance_cols = "manhattan",
@@ -109,14 +144,15 @@ draw_heatmap <- function(matrix_data,
   if (!is.null(clustering_distance_rows)) title <- paste("Row Dist:", clustering_distance_rows)
   if (!is.null(clustering_distance_cols)) title <- paste("Row Dist:", clustering_distance_cols)
 
-  colors <- colorRampPalette(c("#0000FF", "#FF0000"))(50)
+  colors_and_breaks <- create_colors_and_breaks(matrix_data)
 
   pheatmap(matrix_data,
            clustering_distance_rows = clustering_distance_rows,
            clustering_distance_cols = clustering_distance_cols,
            cutree_rows = cutree_rows,
            cutree_cols = cutree_cols,
-           col = colors,
+           col = colors_and_breaks$colors,
+           breaks = colors_and_breaks$breaks,
            cellwidth = width,
            cellheight = height,
            fontsize = fontsize,
@@ -136,7 +172,7 @@ add_plot <- function(plot_list, new_plot, plot_name) {
 collect_heatmaps <- function(plot_list, data, col_factor,
                              normalize = FALSE, normalize_factor = NULL,
                              subset_factor = NULL, subset_levels = NULL,
-                             factor_order  = NULL,
+                             factor_order = NULL,
                              clustering_distance_rows = "manhattan",
                              clustering_distance_cols = "manhattan",
                              cutree_rows = NA,
@@ -400,18 +436,20 @@ for (level in GRK_conditions[1:2]) {
                                 notes = "test_231129")
 }
 
-### 240124
+### 240124 ###
 # separate for GRK2 and GRK6, all GPCRs, all bArr, no norm
+figure_plot_list <- list()
+GRK_conditions <- levels(as.factor(filtered_data$cell_background))
 for (level in GRK_conditions[3:4]) {
   figure_plot_list <- collect_heatmaps(figure_plot_list,
-                                filtered_data,
-                                "FlAsH",
-                                clustering_distance_cols = NULL,
-                                subset_factor = "cell_background", subset_levels = level,
-                                # normalize = TRUE, normalize_factor = "bArr",
-                                factor_order = sensor_order,
-                                # cutree_rows = 5,
-                                height = 11, width = 11)
+                                       filtered_data,
+                                       "FlAsH",
+                                       clustering_distance_cols = NULL,
+                                       subset_factor = "cell_background", subset_levels = level,
+                                       # normalize = TRUE, normalize_factor = "bArr",
+                                       factor_order = sensor_order,
+                                       # cutree_rows = 5,
+                                       height = 20, width = 20)
 }
 
 ### export plots
@@ -430,6 +468,7 @@ export_plot_list <- function(plot_list, folder_name) {
     )
   }
 }
+
 setwd(path)
 export_plot_list(plot_list, folder_name = "240312_heatmaps")
 setwd(path)
