@@ -109,11 +109,14 @@ draw_heatmap <- function(matrix_data,
   if (!is.null(clustering_distance_rows)) title <- paste("Row Dist:", clustering_distance_rows)
   if (!is.null(clustering_distance_cols)) title <- paste("Row Dist:", clustering_distance_cols)
 
+  colors <- colorRampPalette(c("#0000FF", "#FF0000"))(50)
+
   pheatmap(matrix_data,
            clustering_distance_rows = clustering_distance_rows,
            clustering_distance_cols = clustering_distance_cols,
            cutree_rows = cutree_rows,
            cutree_cols = cutree_cols,
+           col = colors,
            cellwidth = width,
            cellheight = height,
            fontsize = fontsize,
