@@ -49,7 +49,7 @@ data <- readxl::read_xlsx(import_file)
 include_data <- modified_data[
   modified_data$`absHS_gt_-1_EC50_btwn_-3_and_0.3`,]
 
-set_unmatched_to_zero <- function(data, reference) {
+set_unmatched_to_zero <- function(data, reference, manual_exclusion) {
   # Create 'experiment' column for both data and reference dfs
   data$experiment <- paste(data$GPCR, data$bArr, data$cell_background, data$FlAsH, sep = "_")
   reference$experiment <- paste(reference$GPCR, reference$bArr, reference$cell_background, reference$FlAsH, sep = "_")
@@ -57,17 +57,25 @@ set_unmatched_to_zero <- function(data, reference) {
   # Identify rows in 'data' that are not found in 'reference'
   unmatched_data <- dplyr::anti_join(data, reference, by = "experiment")
 
-  print("---- No. experiments set to 0 (non-responsive) ----")
-  print(length(unmatched_data$experiment))
-
   # If there are unmatched rows, set their mean_signal to 0
   if (nrow(unmatched_data) > 0) {
     data[data$experiment %in% unmatched_data$experiment, "mean_signal"] <- 0
   }
+
+  # Set mean_signal to 0 for sensors which were manually assigned as "non responder"
+  if (length(manual_exclusion) > 0) {
+    data[data$experiment %in% manual_exclusion, "mean_signal"] <- 0
+  }
+
+  print("---- No. experiments set to 0 (non-responsive) ----")
+  print(length(unmatched_data$experiment)+length(manual_exclusion))
+  print(paste0(length(manual_exclusion), " were categorized as non-responder manually: "))
+  print(manual_exclusion)
+
   return(data)
 }
 
-prepare_matrix_data <- function(unprocessed_data, reference) {
+prepare_matrix_data <- function(unprocessed_data, reference, manual_exclusion) {
   # Filter data for ligand_conc == 1
   subset_data <- unprocessed_data[unprocessed_data$ligand_conc == 1,]
 
@@ -83,12 +91,15 @@ prepare_matrix_data <- function(unprocessed_data, reference) {
   print(length(result$GPCR))
 
   # Set mean_signal to 0 for non-responsive conditions
-  result <- set_unmatched_to_zero(result, reference)
+  result <- set_unmatched_to_zero(result, reference, manual_exclusion)
 
   return(result)
 }
 
-processed_data <- prepare_matrix_data(data, include_data)
+nonResponder <- c("V2R_bArr1_dQ+GRK6_FlAsH3",
+                  "b2AR_bArr2_dQ+EV_FlAsH4",
+                  "b2AR_bArr2_dQ+GRK2_FlAsH9")
+processed_data <- prepare_matrix_data(data, include_data, nonResponder)
 write_xlsx(processed_data, "Filtered_SN_Master.xlsx")
 
 
