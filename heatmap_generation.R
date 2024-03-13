@@ -103,10 +103,10 @@ create_colors_and_breaks <- function(matrix_data) {
   print(breaks)
 
   # Define colors
-  colors_below_zero <- colorRampPalette(c("#0000FF", "#FF0000"))(num_colors_below_zero) # Gradient for < 0
-  colors_above_zero_to_two <- colorRampPalette(c("#FFFFFF", "#8FFFC1"))(num_colors_above_zero_to_two) # Gradient for 0 < x <= 2
-  nonResponderColor <- "#787878" # Color for the very small interval around 0
-  colors_above_two <- "#8FFFC1" # Color for x > 2
+  colors_below_zero <- colorRampPalette(c("#FF0000","#0000FF"))(num_colors_below_zero) # Gradient for < 0
+  colors_above_zero_to_two <- colorRampPalette(c("#FFFFFF", "#CAFFCA"))(num_colors_above_zero_to_two) # Gradient for 0 < x <= 2
+  nonResponderColor <- "#A6A4A4" # Color for the very small interval around 0
+  colors_above_two <- "#CAFFCA" # Color for x > 2
 
   # Assemble the color vector
   colors <- c(colors_below_zero, nonResponderColor, colors_above_zero_to_two, colors_above_two)
