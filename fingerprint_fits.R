@@ -152,11 +152,11 @@ process_dataset <- function(data) {
 # tower PC path
 path <- r"(C:\Users\monar\Google Drive\Arbeit\homeoffice\231119_EM_PROGRAM_newdata)"
 # laptop path
-# path <- r"(C:\Users\marli\Desktop\231119_EM_PROGRAM_newdata)"
+path <- r"(C:\Users\marli\Desktop\231119_EM_PROGRAM_newdata)"
 setwd(path)
 
 # Load data
-import_file <- "Master_reformat.xlsx"
+import_file <- "Master_SN_reformat.xlsx"
 data <- readxl::read_xlsx(import_file)
 
 # create folders for start normalised
