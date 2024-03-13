@@ -14,7 +14,7 @@ lapply(wants, require, character.only = TRUE)
 # tower PC path
 path <- r"(C:\Users\monar\Google Drive\Arbeit\homeoffice\231119_EM_PROGRAM_newdata)"
 # laptop path
-# path <- r"(C:\Users\marli\Desktop\231119_EM_PROGRAM_newdata)"
+path <- r"(C:\Users\marli\Desktop\231119_EM_PROGRAM_newdata)"
 setwd(path)
 
 # Load data
