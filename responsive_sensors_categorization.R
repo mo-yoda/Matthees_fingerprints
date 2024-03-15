@@ -49,7 +49,7 @@ data <- readxl::read_xlsx(import_file)
 include_data <- modified_data[
   modified_data$`absHS_gt_-1_EC50_btwn_-3_and_0.3`,]
 
-set_unmatched_to_zero <- function(data, reference, manual_exclusion) {
+set_unmatched_to_zero <- function(data, reference, manual_exclusion, signal_col) {
   # Create 'experiment' column for both data and reference dfs
   data$experiment <- paste(data$GPCR, data$bArr, data$cell_background, data$FlAsH, sep = "_")
   reference$experiment <- paste(reference$GPCR, reference$bArr, reference$cell_background, reference$FlAsH, sep = "_")
@@ -59,12 +59,12 @@ set_unmatched_to_zero <- function(data, reference, manual_exclusion) {
 
   # If there are unmatched rows, set their mean_signal to 0
   if (nrow(unmatched_data) > 0) {
-    data[data$experiment %in% unmatched_data$experiment, "mean_signal"] <- 0
+    data[data$experiment %in% unmatched_data$experiment, signal_col] <- 0
   }
 
   # Set mean_signal to 0 for sensors which were manually assigned as "non responder"
   if (length(manual_exclusion) > 0) {
-    data[data$experiment %in% manual_exclusion, "mean_signal"] <- 0
+    data[data$experiment %in% manual_exclusion, signal_col] <- 0
   }
 
   print("---- No. experiments set to 0 (non-responsive) ----")
@@ -80,27 +80,30 @@ prepare_matrix_data <- function(unprocessed_data, reference, manual_exclusion) {
   subset_data <- unprocessed_data[unprocessed_data$ligand_conc == 1,]
 
   # Group by the combination of factors and filter groups with 3 or more values
-  grouped_data <- subset_data %>%
+  replicates_data <- subset_data %>%
     dplyr::group_by(GPCR, bArr, cell_background, FlAsH)
 
   # Calculate the mean of the signal for each group
-  result <- grouped_data %>%
+  mean_data <- replicates_data %>%
     dplyr::summarise(mean_signal = mean(signal, na.rm = TRUE))
 
   print("###### No. of experiments measured #########")
-  print(length(result$GPCR))
+  print(length(mean_data$GPCR))
 
-  # Set mean_signal to 0 for non-responsive conditions
-  result <- set_unmatched_to_zero(result, reference, manual_exclusion)
+  # Set signal to 0 for non-responsive conditions in mean_data and replicates_data
+  filtered_data_list <- list()
+  filtered_data_list[["mean_data_filtered"]] <-
+    set_unmatched_to_zero(mean_data, reference, manual_exclusion, "mean_signal")
+  filtered_data_list[["replicates_data_filtered"]] <-
+    set_unmatched_to_zero(replicates_data, reference, manual_exclusion, "signal")
 
-  return(result)
+  return(filtered_data_list)
 }
 
 nonResponder <- c("V2R_bArr1_dQ+GRK6_FlAsH3",
                   "b2AR_bArr2_dQ+EV_FlAsH4",
                   "b2AR_bArr2_dQ+GRK2_FlAsH9")
 processed_data <- prepare_matrix_data(data, include_data, nonResponder)
-write_xlsx(processed_data, "Filtered_SN_Master.xlsx")
 
-
-
+write_xlsx(processed_data[[1]], "Filtered_SN_Master.xlsx")
+write_xlsx(processed_data[[2]], "Replicates_Filtered_SN_Master.xlsx")
