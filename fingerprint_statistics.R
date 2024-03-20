@@ -53,7 +53,9 @@ normalize_signals <- function(data, mean_signals, max_flash_means) {
       FlAsH = FlAsH.x,
       max_signal = mean_signal
     ) %>%
-    mutate(normalized_signal = signal/max_signal)
+    mutate(normalized_signal =
+             ifelse(max_signal == 0, 0, # if max_signal is 0, normalized_signal = 0
+                    signal/max_signal)) # else
   return(normalized_data)
 }
 
