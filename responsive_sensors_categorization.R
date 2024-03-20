@@ -102,6 +102,7 @@ prepare_matrix_data <- function(unprocessed_data, reference, manual_exclusion) {
 
 nonResponder <- c("V2R_bArr1_dQ+GRK6_FlAsH3",
                   "b2AR_bArr2_dQ+EV_FlAsH4",
+                  "b2AR_bArr2_dQ+EV_FlAsH9",
                   "b2AR_bArr2_dQ+GRK2_FlAsH9")
 processed_data <- prepare_matrix_data(data, include_data, nonResponder)
 
