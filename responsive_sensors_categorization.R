@@ -94,6 +94,7 @@ prepare_matrix_data <- function(unprocessed_data, reference, manual_exclusion) {
   filtered_data_list <- list()
   filtered_data_list[["mean_data_filtered"]] <-
     set_unmatched_to_zero(mean_data, reference, manual_exclusion, "mean_signal")
+  print("-----filtered replicates-----")
   filtered_data_list[["replicates_data_filtered"]] <-
     set_unmatched_to_zero(replicates_data, reference, manual_exclusion, "signal")
 
