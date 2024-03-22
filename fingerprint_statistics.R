@@ -46,7 +46,7 @@ find_max_flash_means <- function(mean_signals) {
 }
 
 # Function to normalize signals and add norm_to column
-normalize_signals <- function(data, mean_signals, max_flash_means) {
+normalize_signals <- function(data, max_flash_means) {
   normalized_data <- data %>%
     left_join(max_flash_means, by = c("cell_background", "bArr", "GPCR")) %>%
     select(-ID) %>% # remove this column, not needed
