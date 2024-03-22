@@ -2,6 +2,7 @@
 wants <- c("openxlsx",
            "dplyr",
            "tidyr",
+           "ggplot2",
            "writexl",
            "multcompView" # for anova + tukey
 )
@@ -161,29 +162,45 @@ coefficients_df <- coefficients_df %>%
   separate(combination, into = c("cell_background", "bArr", "FlAsH"), sep = "_") %>%
   mutate(across(c(cell_background, bArr, FlAsH), as.factor))
 
+### create bargraphs from tail-core coeff ###
+# Split data into subsets based on cell_background
+coeff_subsets <- coefficients_df %>%
+  group_by(cell_background) %>%
+  group_split()
+
+# Initialize an empty list to store the resulting plots
+plot_list <- list()
+
+# Loop over each subset and apply the perform_tukey function
+for (i in seq_along(coeff_subsets)){
+  temp_sub <- coeff_subsets[[i]]
+  plot_name <- as.character(temp_sub$cell_background[1])
+  print("_------------")
+  print(plot_name)
+  barplot <- ggplot(temp_sub) +
+    geom_col(aes(tail_core_transferabiility_diff, FlAsH)) +
+    xlim(c(-2,2)) +
+    theme_classic() +
+    geom_vline(xintercept = 0)
+  plot_list[[plot_name]] <- barplot
+}
+
+### export plots
+export_plot_list <- function(plot_list, folder_name) {
+  if (!dir.exists(folder_name)) {
+    dir.create(folder_name)
+  }
+  setwd(paste0(getwd(), "/", folder_name, "/"))
+  for (i in seq_along(plot_list)) {
+    # file name based on the plot name
+    file_names <- paste0(names(plot_list)[i], ".png")
+    # Save the plot to a file
+    for (file in file_names){
+          ggsave(file, plot = plot_list[[i]],
+          )
+    }
+  }
+}
+
+export_plot_list(plot_list, "240322_tail-core_coeff")
 write_xlsx(coefficients_df , "FlAsH_core,tail_coefficients.xlsx")
-
-testing <- coefficients_df[coefficients_df$cell_background == "Con",]
-barplot(testing$tail_core_transferabiility_diff ~ testing$FlAsH)
-
-plot(testing$core_transferability_diff ~ testing$FlAsH, ylim = c(0,1.4))
-plot(testing$tail_transferability_diff ~ testing$FlAsH, ylim = c(0,1.4))
-
-plot(testing$core_transferability_p ~ testing$FlAsH)
-plot(testing$tail_transferability_p ~ testing$FlAsH)
-
-
-
-# test_data <- norm_data[norm_data$FlAsH == "FlAsH10" &
-#                          norm_data$cell_background == "dQ+GRK6" &
-#                          norm_data$bArr == "bArr2",]
-# boxplot(test_data$normalized_signal ~ test_data$GPCR)
-
-# perform_tukey(test_data)
-# test_tukey$`data_subset$GPCR`[,'p adj']
-
-# eher tail transferable
-# bArr2, GRK2, F9
-# bArr2, GRK6, F2 (nichts significant though!
-
-# testing poss. coefficients
