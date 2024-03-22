@@ -161,6 +161,8 @@ coefficients_df <- coefficients_df %>%
   separate(combination, into = c("cell_background", "bArr", "FlAsH"), sep = "_") %>%
   mutate(across(c(cell_background, bArr, FlAsH), as.factor))
 
+write_xlsx(coefficients_df , "FlAsH_core,tail_coefficients.xlsx")
+
 testing <- coefficients_df[coefficients_df$cell_background == "Con",]
 barplot(testing$tail_core_transferabiility_diff ~ testing$FlAsH)
 
