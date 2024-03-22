@@ -1,7 +1,8 @@
 ###create needed environment with loading packages
 wants <- c("openxlsx",
            "dplyr",
-           "writexl"
+           "writexl",
+           "multcompView" # for anova + tukey
 )
 has <- wants %in% rownames(installed.packages())
 if (any(!has)) install.packages(wants[!has])
@@ -69,4 +70,26 @@ normalize_data <- function(data) {
   normalized_data <- normalize_signals(data, mean_signals, max_flash_means)
   return(normalized_data)
 }
+
 norm_data <- normalize_data(replicates_data_filtered)
+
+# PLAN now:
+# group barr and cell background
+# test all against all per F position
+
+
+perform_tukey <- function(data_subset){
+  anova <- aov(data_subset$normalized_signal ~ data_subset$GPCR)
+  tukey_result <- TukeyHSD(anova, 'data_subset$GPCR')
+  print(tukey_result)
+}
+
+test_data <- norm_data[norm_data$FlAsH == "FlAsH10" &
+                         norm_data$cell_background == "dQ+GRK6" &
+                         norm_data$bArr == "bArr2",]
+boxplot(test_data$normalized_signal ~ test_data$GPCR)
+perform_tukey(test_data)
+
+# eher tail transferable
+# bArr2, GRK2, F9
+# bArr2, GRK6, F2 (nichts significant though!
