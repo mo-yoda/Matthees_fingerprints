@@ -68,7 +68,7 @@ normalize_data <- function(data) {
   # indentify F position with max signal for each GPCR/bArr/cell_background combination
   max_flash_means <- find_max_flash_means(mean_signals)
   # normalize replicates to the max mean
-  normalized_data <- normalize_signals(data, mean_signals, max_flash_means)
+  normalized_data <- normalize_signals(data, max_flash_means)
   return(normalized_data)
 }
 
@@ -108,7 +108,7 @@ apply_tukey_tests <- function(data) {
 # Apply the function to your normalized data
 tukey_test_results <- apply_tukey_tests(norm_data)
 
-### try different coefficients ###
+### calculate tail and core coefficents ###
 # Initialize a list to store the coefficients for each FlAsH position where bArr == "bArr2"
 coefficients_list <- list()
 
@@ -132,16 +132,15 @@ for(name in names(tukey_test_results)) {
     core_transferability_p <- (V2R_b2AR["p adj"] + V2b2_b2V2["p adj"]) + (V2R_b2V2["p adj"] + V2b2_b2AR["p adj"])
     tail_transferability_diff <- (abs(V2R_V2b2["diff"]) + abs(b2V2_b2AR["diff"]))
     core_transferability_diff <- (abs(V2R_b2V2["diff"]) + abs(V2b2_b2AR["diff"]))
-    # tail_transferability_diff <- (abs(V2R_b2AR["diff"]) + abs(V2b2_b2V2["diff"])) - (abs(V2R_V2b2["diff"]) + abs(b2V2_b2AR["diff"]))
-    # core_transferability_diff <- (abs(V2R_b2AR["diff"]) + abs(V2b2_b2V2["diff"])) - (abs(V2R_b2V2["diff"]) + abs(V2b2_b2AR["diff"]))
-
+    tail_core_transferabiility_diff <- (tail_transferability_diff - core_transferability_diff)
 
     # Store the results in the list
     coefficients_list[[name]] <- list(
       tail_transferability_p = tail_transferability_p,
       core_transferability_p = core_transferability_p,
       tail_transferability_diff = tail_transferability_diff,
-      core_transferability_diff = core_transferability_diff
+      core_transferability_diff = core_transferability_diff,
+      tail_core_transferabiility_diff = tail_core_transferabiility_diff
     )
   }
 }
@@ -153,6 +152,7 @@ coefficients_df <- data.frame(
   core_transferability_p = sapply(coefficients_list, function(x) x$core_transferability_p),
   tail_transferability_diff = sapply(coefficients_list, function(x) x$tail_transferability_diff),
   core_transferability_diff = sapply(coefficients_list, function(x) x$core_transferability_diff),
+  tail_core_transferabiility_diff = sapply(coefficients_list, function(x) x$tail_core_transferabiility_diff),
   stringsAsFactors = FALSE
 )
 
@@ -161,10 +161,9 @@ coefficients_df <- coefficients_df %>%
   separate(combination, into = c("cell_background", "bArr", "FlAsH"), sep = "_") %>%
   mutate(across(c(cell_background, bArr, FlAsH), as.factor))
 
-# View the resulting table
-print(coefficients_df)
+testing <- coefficients_df[coefficients_df$cell_background == "Con",]
+barplot(testing$tail_core_transferabiility_diff ~ testing$FlAsH)
 
-testing <- coefficients_df[coefficients_df$cell_background == "dQ+GRK2",]
 plot(testing$core_transferability_diff ~ testing$FlAsH, ylim = c(0,1.4))
 plot(testing$tail_transferability_diff ~ testing$FlAsH, ylim = c(0,1.4))
 
