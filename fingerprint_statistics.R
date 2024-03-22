@@ -12,7 +12,7 @@ lapply(wants, require, character.only = TRUE)
 # tower PC path
 path <- r"(C:\Users\monar\Google Drive\Arbeit\homeoffice\231119_EM_PROGRAM_newdata)"
 # laptop path
-path <- r"(C:\Users\marli\Desktop\231119_EM_PROGRAM_newdata)"
+# path <- r"(C:\Users\marli\Desktop\231119_EM_PROGRAM_newdata)"
 setwd(path)
 
 # Load data
@@ -73,23 +73,49 @@ normalize_data <- function(data) {
 
 norm_data <- normalize_data(replicates_data_filtered)
 
-# PLAN now:
-# group barr and cell background
-# test all against all per F position
-
-
+### ANOVA + Tukey of normalised data ###
 perform_tukey <- function(data_subset){
   anova <- aov(data_subset$normalized_signal ~ data_subset$GPCR)
   tukey_result <- TukeyHSD(anova, 'data_subset$GPCR')
-  print(tukey_result)
+  # print(tukey_result)
+  return(tukey_result)
 }
 
-test_data <- norm_data[norm_data$FlAsH == "FlAsH10" &
-                         norm_data$cell_background == "dQ+GRK6" &
-                         norm_data$bArr == "bArr2",]
-boxplot(test_data$normalized_signal ~ test_data$GPCR)
-perform_tukey(test_data)
+# function to run the Tukey test to each subset of data
+apply_tukey_tests <- function(data) {
+  # Split data into subsets based on cell_background, bArr, and FlAsH
+  data_subsets <- data %>%
+    group_by(cell_background, bArr, FlAsH) %>%
+    group_split()
+
+  # Initialize an empty list to store the results
+  tukey_results <- list()
+
+  # Loop over each subset and apply the perform_tukey function
+  for(i in seq_along(data_subsets)) {
+    subset <- data_subsets[[i]]
+    # Use the first row of each subset to generate a name for the result based on the grouping factors
+    result_name <- paste(subset$cell_background[1], subset$bArr[1], subset$FlAsH[1], sep="_")
+    # Perform Tukey test and save the result with the name
+    tukey_results[[result_name]] <- perform_tukey(subset)
+  }
+
+  return(tukey_results)
+}
+
+# Apply the function to your normalized data
+tukey_test_results <- apply_tukey_tests(norm_data)
+
+# test_data <- norm_data[norm_data$FlAsH == "FlAsH10" &
+#                          norm_data$cell_background == "dQ+GRK6" &
+#                          norm_data$bArr == "bArr2",]
+# boxplot(test_data$normalized_signal ~ test_data$GPCR)
+
+# perform_tukey(test_data)
+# test_tukey$`data_subset$GPCR`[,'p adj']
 
 # eher tail transferable
 # bArr2, GRK2, F9
 # bArr2, GRK6, F2 (nichts significant though!
+
+# testing poss. coefficients
