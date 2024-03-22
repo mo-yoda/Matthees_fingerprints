@@ -134,6 +134,7 @@ for(name in names(tukey_test_results)) {
     tail_transferability_diff <- (abs(V2R_V2b2["diff"]) + abs(b2V2_b2AR["diff"]))
     core_transferability_diff <- (abs(V2R_b2V2["diff"]) + abs(V2b2_b2AR["diff"]))
     tail_core_transferabiility_diff <- (tail_transferability_diff - core_transferability_diff)
+    wildtype_diff <- abs(V2R_b2AR["diff"])
 
     # Store the results in the list
     coefficients_list[[name]] <- list(
@@ -141,7 +142,8 @@ for(name in names(tukey_test_results)) {
       core_transferability_p = core_transferability_p,
       tail_transferability_diff = tail_transferability_diff,
       core_transferability_diff = core_transferability_diff,
-      tail_core_transferabiility_diff = tail_core_transferabiility_diff
+      tail_core_transferabiility_diff = tail_core_transferabiility_diff,
+      wildtype_diff = wildtype_diff
     )
   }
 }
@@ -154,6 +156,7 @@ coefficients_df <- data.frame(
   tail_transferability_diff = sapply(coefficients_list, function(x) x$tail_transferability_diff),
   core_transferability_diff = sapply(coefficients_list, function(x) x$core_transferability_diff),
   tail_core_transferabiility_diff = sapply(coefficients_list, function(x) x$tail_core_transferabiility_diff),
+  wildtype_diff = sapply(coefficients_list, function(x) x$wildtype_diff),
   stringsAsFactors = FALSE
 )
 
@@ -175,8 +178,6 @@ plot_list <- list()
 for (i in seq_along(coeff_subsets)){
   temp_sub <- coeff_subsets[[i]]
   plot_name <- as.character(temp_sub$cell_background[1])
-  print("_------------")
-  print(plot_name)
   barplot <- ggplot(temp_sub) +
     geom_col(aes(tail_core_transferabiility_diff, FlAsH)) +
     xlim(c(-2,2)) +
