@@ -4,6 +4,7 @@ wants <- c("openxlsx",
            "tidyr",
            "ggplot2",
            "writexl",
+           "patchwork", # for joining plots
            "multcompView" # for anova + tukey
 )
 has <- wants %in% rownames(installed.packages())
@@ -225,7 +226,7 @@ for (name in names(t_test_results)) {
 }
 
 
-#### create bargraphs from tail-core coeff ####
+#### create plots from tail-core coeff ####
 # Split data into subsets based on cell_background
 coeff_subsets <- coefficients_df %>%
   group_by(cell_background) %>%
@@ -247,7 +248,7 @@ for (i in seq_along(coeff_subsets)) {
 }
 
 
-creat_scatterplot <- function(dataframe, coefficient_col) {
+create_scatterplot <- function(dataframe, coefficient_col) {
   # create scatterplot with all cell backgrounds
   costumm_shapes <- c(16, 16, 16, 16)
   costum_colors <- c("#000080", "#808080", "#F94040", "#077E97")
@@ -277,15 +278,57 @@ creat_scatterplot <- function(dataframe, coefficient_col) {
   return(scatterplot)
 }
 
-tail_core_scatter <- creat_scatterplot(coefficients_df, coefficients_df$tail_core_transferabiility_diff)
+tail_core_scatter <- create_scatterplot(coefficients_df, coefficients_df$tail_core_transferabiility_diff)
 plot_list[["tail_core_scatter"]] <- tail_core_scatter
 
-tail_core_wt_factor_scatter <- creat_scatterplot(coefficients_df,
-                                                 coefficients_df$tail_core_transferabiility_diff_wt_factor)
+tail_core_wt_factor_scatter <- create_scatterplot(coefficients_df,
+                                                  coefficients_df$tail_core_transferabiility_diff_wt_factor)
 plot_list[["tail_core_wt_factor_scatter"]] <- tail_core_wt_factor_scatter
 
+#### add classification tiles dependent on difference of WT GPCRs ####
+# Custom colors for cell_backgrounds and order of FlAsH levels
+costum_colors <- c(Con = "#000080", `dQ+EV` = "#808080", `dQ+GRK2` = "#F94040", `dQ+GRK6` = "#077E97", "Outline" = "white")
+flash_order <- c("FlAsH1", "FlAsH10", "FlAsH9", "FlAsH7", "FlAsH5", "FlAsH4", "FlAsH3", "FlAsH2")
 
-### export plots
+# if p is significant, tile should be solid
+pvalue_visualization <- coefficients_df %>%
+  mutate(fill_status = ifelse(
+    is.na(sign_WT_diff) | sign_WT_diff >= 0.1,
+    "Outline", "Filled"))
+pvalue_visualization <- pvalue_visualization %>%
+  mutate(tile_color = ifelse(fill_status == "Filled", as.character(cell_background), NA), # Filled or NA for outline
+         outline_color = ifelse(fill_status == "Filled", as.character(cell_background), as.character(cell_background))) # Use cell_background color for outline
+
+
+# Creating the heatmap-like classification panel
+pvalue_plot <- ggplot(pvalue_visualization, aes(x = cell_background,
+                                                y = factor(FlAsH, levels = flash_order))) +
+  geom_tile(aes(fill = ifelse(fill_status == "Filled", as.character(cell_background), "Outline"),
+                color = ifelse(fill_status == "Filled", as.character(cell_background), as.character(cell_background))),
+            size = 1.5, width = 0.9, height = 0.9) +
+  scale_fill_manual(values = costum_colors) +
+  scale_color_manual(values = costum_colors) +
+  scale_x_discrete(position = "top", limits = c("Con", "dQ+EV", "dQ+GRK2", "dQ+GRK6")) +
+  scale_color_manual(values = costum_colors, name = "Cell Background") +
+  coord_fixed(ratio = 1) +
+  theme_minimal() +
+  theme(axis.title = element_blank(),
+        axis.text.y = element_text(size = 20),
+        axis.text.x = element_blank(),
+        legend.position = "none",
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank()
+  )
+
+plot_list[["WT_sign_tiles"]] <- pvalue_plot
+
+combined_plot <- pvalue_plot +
+  tail_core_scatter +
+  plot_layout(widths = c(4,10))
+plot_list[["WT_sign_scatter"]] <- combined_plot
+
+
+#### export plots ####
 export_plot_list <- function(plot_list, folder_name) {
   if (!dir.exists(folder_name)) {
     dir.create(folder_name)
