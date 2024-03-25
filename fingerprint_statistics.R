@@ -248,7 +248,7 @@ for (i in seq_along(coeff_subsets)) {
 }
 
 
-create_scatterplot <- function(dataframe, coefficient_col) {
+create_scatterplot <- function(dataframe, coefficient_col, set_xlim = TRUE, show_legend = TRUE) {
   # create scatterplot with all cell backgrounds
   costumm_shapes <- c(16, 16, 16, 16)
   costum_colors <- c("#000080", "#808080", "#F94040", "#077E97")
@@ -261,7 +261,6 @@ create_scatterplot <- function(dataframe, coefficient_col) {
     geom_point(aes(shape = cell_background,
                    color = cell_background,
                    size = 2)) +
-    xlim(c(-2, 2)) +
     theme_classic() +
     theme(axis.text = element_text(size = 20), # bigger axis text
           axis.title = element_blank(),
@@ -275,6 +274,13 @@ create_scatterplot <- function(dataframe, coefficient_col) {
            shape = guide_legend(override.aes = list(size = 5))) + # bigger symbols in legend
     scale_shape_manual(values = costumm_shapes) +
     scale_color_manual(values = costum_colors)
+  # logicial variables
+  if (set_xlim) {
+    scatterplot <- scatterplot + xlim(c(-2, 2))
+  }
+  if (!show_legend) {
+    scatterplot <- scatterplot + theme(legend.position = "none")
+  }
   return(scatterplot)
 }
 
@@ -301,11 +307,11 @@ pvalue_visualization <- pvalue_visualization %>%
 
 
 # Creating the heatmap-like classification panel
-pvalue_plot <- ggplot(pvalue_visualization, aes(x = cell_background,
-                                                y = factor(FlAsH, levels = flash_order))) +
+pvalue_tiles <- ggplot(pvalue_visualization, aes(x = cell_background,
+                                                 y = factor(FlAsH, levels = flash_order))) +
   geom_tile(aes(fill = ifelse(fill_status == "Filled", as.character(cell_background), "Outline"),
                 color = ifelse(fill_status == "Filled", as.character(cell_background), as.character(cell_background))),
-            size = 1.5, width = 0.9, height = 0.9) +
+            size = 1, width = 0.9, height = 0.9) +
   scale_fill_manual(values = costum_colors) +
   scale_color_manual(values = costum_colors) +
   scale_x_discrete(position = "top", limits = c("Con", "dQ+EV", "dQ+GRK2", "dQ+GRK6")) +
@@ -320,13 +326,22 @@ pvalue_plot <- ggplot(pvalue_visualization, aes(x = cell_background,
         panel.grid.minor = element_blank()
   )
 
-plot_list[["WT_sign_tiles"]] <- pvalue_plot
-
-combined_plot <- pvalue_plot +
+plot_list[["WT_sign_tiles"]] <- pvalue_tiles
+combined_plotA <- pvalue_tiles +
   tail_core_scatter +
-  plot_layout(widths = c(4,10))
-plot_list[["WT_sign_scatter"]] <- combined_plot
+  plot_layout(widths = c(4, 10))
+plot_list[["WT_sign_tiles_and_scatter"]] <- combined_plotA
 
+
+pvalue_scatter <- create_scatterplot(coefficients_df,
+                                     coefficients_df$wildtype_diff,
+                                     set_xlim = FALSE,
+                                     show_legend = FALSE)
+plot_list[["WT_sign_scatter"]] <- pvalue_scatter
+combined_plotB <- pvalue_scatter +
+  tail_core_scatter +
+  plot_layout(widths = c(4, 10))
+plot_list[["WT_sign_scatter_and_scatter"]] <- combined_plotB
 
 #### export plots ####
 export_plot_list <- function(plot_list, folder_name) {
