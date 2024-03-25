@@ -1,4 +1,4 @@
-###create needed environment with loading packages
+#### create needed environment with loading packages ####
 wants <- c("openxlsx",
            "dplyr",
            "tidyr",
@@ -10,7 +10,7 @@ has <- wants %in% rownames(installed.packages())
 if (any(!has)) install.packages(wants[!has])
 lapply(wants, require, character.only = TRUE)
 
-### Data processing
+#### data normalisation ####
 # tower PC path
 path <- r"(C:\Users\monar\Google Drive\Arbeit\homeoffice\231119_EM_PROGRAM_newdata)"
 # laptop path
@@ -75,7 +75,7 @@ normalize_data <- function(data) {
 
 norm_data <- normalize_data(replicates_data_filtered)
 
-### ANOVA + Tukey of normalised data ###
+#### ANOVA + Tukey of normalised data ####
 perform_tukey <- function(data_subset) {
   # anova <- aov(data_subset$signal ~ data_subset$GPCR)
   anova <- aov(data_subset$normalized_signal ~ data_subset$GPCR)
@@ -109,7 +109,13 @@ apply_tukey_tests <- function(data) {
 # Apply the function to your normalized data
 tukey_test_results <- apply_tukey_tests(norm_data)
 
-### calculate tail and core coefficents ###
+#### compare conf change for wildtype GPCRs with t test ####
+
+
+#### calculate tail and core coefficents ####
+## ultimately, coefficients were calculated from absolute difference
+## thus, only the difference given in tukey results were used and not any p values
+
 # Initialize a list to store the coefficients for each FlAsH position where bArr == "bArr2"
 coefficients_list <- list()
 
@@ -165,7 +171,7 @@ coefficients_df <- coefficients_df %>%
   separate(combination, into = c("cell_background", "bArr", "FlAsH"), sep = "_") %>%
   mutate(across(c(cell_background, bArr, FlAsH), as.factor))
 
-### create bargraphs from tail-core coeff ###
+#### create bargraphs from tail-core coeff ####
 # Split data into subsets based on cell_background
 coeff_subsets <- coefficients_df %>%
   group_by(cell_background) %>%
@@ -174,7 +180,7 @@ coeff_subsets <- coefficients_df %>%
 # Initialize an empty list to store the resulting plots
 plot_list <- list()
 
-# Loop over each subset and apply the perform_tukey function
+# Loop over each subset and create barplot for each cell background
 for (i in seq_along(coeff_subsets)) {
   temp_sub <- coeff_subsets[[i]]
   plot_name <- as.character(temp_sub$cell_background[1])
