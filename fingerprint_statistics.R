@@ -199,7 +199,8 @@ for (i in seq_along(coeff_subsets)) {
 
 creat_scatterplot <- function(dataframe, coefficient_col) {
   # create scatterplot with all cell backgrounds
-  costumm_shapes <- c(16, 17, 15, 18)
+  costumm_shapes <- c(16, 16, 16, 16)
+  costum_colors <- c("#000080", "#808080", "#F94040", "#077E97")
   flash_order <- c("FlAsH1", "FlAsH10", "FlAsH9", "FlAsH7", "FlAsH5", "FlAsH4", "FlAsH3", "FlAsH2")
 
   scatterplot <- ggplot(dataframe,
@@ -221,7 +222,8 @@ creat_scatterplot <- function(dataframe, coefficient_col) {
           panel.grid.major = element_line(color = "grey90")) +
     guides(size = "none", # removed part of the legend for the size of the points
            shape = guide_legend(override.aes = list(size = 5))) + # bigger symbols in legend
-    scale_shape_manual(values = costumm_shapes)
+    scale_shape_manual(values = costumm_shapes) +
+    scale_color_manual(values = costum_colors)
   return(scatterplot)
 }
 tail_core_scatter <- creat_scatterplot(coefficients_df, coefficients_df$tail_core_transferabiility_diff)
