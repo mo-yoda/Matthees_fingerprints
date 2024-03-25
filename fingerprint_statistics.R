@@ -58,7 +58,7 @@ normalize_signals <- function(data, max_flash_means) {
     ) %>%
     mutate(normalized_signal =
              ifelse(max_signal == 0, 0, # if max_signal is 0, normalized_signal = 0
-                    signal/max_signal)) # else
+                    signal / max_signal)) # else
   return(normalized_data)
 }
 
@@ -76,7 +76,7 @@ normalize_data <- function(data) {
 norm_data <- normalize_data(replicates_data_filtered)
 
 ### ANOVA + Tukey of normalised data ###
-perform_tukey <- function(data_subset){
+perform_tukey <- function(data_subset) {
   # anova <- aov(data_subset$signal ~ data_subset$GPCR)
   anova <- aov(data_subset$normalized_signal ~ data_subset$GPCR)
   tukey_result <- TukeyHSD(anova, 'data_subset$GPCR')
@@ -95,10 +95,10 @@ apply_tukey_tests <- function(data) {
   tukey_results <- list()
 
   # Loop over each subset and apply the perform_tukey function
-  for(i in seq_along(data_subsets)) {
+  for (i in seq_along(data_subsets)) {
     subset <- data_subsets[[i]]
     # Use the first row of each subset to generate a name for the result based on the grouping factors
-    result_name <- paste(subset$cell_background[1], subset$bArr[1], subset$FlAsH[1], sep="_")
+    result_name <- paste(subset$cell_background[1], subset$bArr[1], subset$FlAsH[1], sep = "_")
     # Perform Tukey test and save the result with the name
     tukey_results[[result_name]] <- perform_tukey(subset)
   }
@@ -114,19 +114,19 @@ tukey_test_results <- apply_tukey_tests(norm_data)
 coefficients_list <- list()
 
 # Iterate through each set of results in tukey_test_results
-for(name in names(tukey_test_results)) {
+for (name in names(tukey_test_results)) {
   # Filter results for bArr2
-  if(grepl("bArr2", name)) {
+  if (grepl("bArr2", name)) {
     # Extract the Tukey HSD test result
     tukey_result <- tukey_test_results[[name]]$`data_subset$GPCR`
 
     # Extract the necessary pairwise comparisons
-    V2R_b2AR <- tukey_result["V2R-b2AR", ]
-    V2b2_b2V2 <- tukey_result["V2b2-b2V2", ]
-    V2R_V2b2 <- tukey_result["V2R-V2b2", ]
-    b2V2_b2AR <- tukey_result["b2V2-b2AR", ]
-    V2R_b2V2 <- tukey_result["V2R-b2V2", ]
-    V2b2_b2AR <- tukey_result["V2b2-b2AR", ]
+    V2R_b2AR <- tukey_result["V2R-b2AR",]
+    V2b2_b2V2 <- tukey_result["V2b2-b2V2",]
+    V2R_V2b2 <- tukey_result["V2R-V2b2",]
+    b2V2_b2AR <- tukey_result["b2V2-b2AR",]
+    V2R_b2V2 <- tukey_result["V2R-b2V2",]
+    V2b2_b2AR <- tukey_result["V2b2-b2AR",]
 
     # Calculate coefficients
     tail_transferability_p <- (V2R_b2AR["p adj"] + V2b2_b2V2["p adj"]) + (V2R_V2b2["p adj"] + b2V2_b2AR["p adj"])
@@ -175,16 +175,42 @@ coeff_subsets <- coefficients_df %>%
 plot_list <- list()
 
 # Loop over each subset and apply the perform_tukey function
-for (i in seq_along(coeff_subsets)){
+for (i in seq_along(coeff_subsets)) {
   temp_sub <- coeff_subsets[[i]]
   plot_name <- as.character(temp_sub$cell_background[1])
   barplot <- ggplot(temp_sub) +
     geom_col(aes(tail_core_transferabiility_diff, FlAsH)) +
-    xlim(c(-2,2)) +
+    xlim(c(-2, 2)) +
     theme_classic() +
     geom_vline(xintercept = 0)
   plot_list[[plot_name]] <- barplot
 }
+
+# create scatterplot with all cell backgrounds
+costumm_shapes <- c(16, 17, 15, 18)
+flash_order <- c("FlAsH1", "FlAsH10", "FlAsH9", "FlAsH7", "FlAsH5", "FlAsH4", "FlAsH3", "FlAsH2")
+
+scatterplot <- ggplot(coefficients_df,
+                      aes(x = tail_core_transferabiility_diff,
+                          y = factor(FlAsH, levels = flash_order))) +
+  geom_vline(xintercept = 0) +
+  geom_point(aes(shape = cell_background,
+                 color = cell_background,
+                 size = 2)) +
+  xlim(c(-2, 2)) +
+  theme_classic() +
+  theme(axis.text = element_text(size = 20), # bigger axis text
+        axis.title = element_blank(),
+        axis.ticks.length = unit(0.35, "cm"),
+        legend.text = element_text(size = 14),
+        legend.title = element_blank(),
+        legend.key.size = unit(1.5, "lines"),
+        panel.border = element_rect(color = "black", fill = NA, size = 1.3),
+        panel.grid.major = element_line(color = "grey90")) +
+  guides(size = "none", # removed part of the legend for the size of the points
+         shape = guide_legend(override.aes = list(size = 5))) + # bigger symbols in legend
+  scale_shape_manual(values = costumm_shapes)
+plot_list[["all_data_scatter"]] <- scatterplot
 
 ### export plots
 export_plot_list <- function(plot_list, folder_name) {
@@ -196,12 +222,12 @@ export_plot_list <- function(plot_list, folder_name) {
     # file name based on the plot name
     file_names <- paste0(names(plot_list)[i], ".png")
     # Save the plot to a file
-    for (file in file_names){
-          ggsave(file, plot = plot_list[[i]],
-          )
+    for (file in file_names) {
+      ggsave(file, plot = plot_list[[i]],
+      )
     }
   }
 }
 
 export_plot_list(plot_list, "240322_tail-core_coeff")
-write_xlsx(coefficients_df , "FlAsH_core,tail_coefficients.xlsx")
+write_xlsx(coefficients_df, "FlAsH_core,tail_coefficients.xlsx")
