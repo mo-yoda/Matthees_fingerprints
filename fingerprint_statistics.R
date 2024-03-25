@@ -77,10 +77,8 @@ norm_data <- normalize_data(replicates_data_filtered)
 
 #### ANOVA + Tukey of normalised data ####
 perform_tukey <- function(data_subset) {
-  # anova <- aov(data_subset$signal ~ data_subset$GPCR)
   anova <- aov(data_subset$normalized_signal ~ data_subset$GPCR)
   tukey_result <- TukeyHSD(anova, 'data_subset$GPCR')
-  # print(tukey_result)
   return(tukey_result)
 }
 
@@ -140,6 +138,9 @@ for (name in names(tukey_test_results)) {
     tail_transferability_diff <- (abs(V2R_V2b2["diff"]) + abs(b2V2_b2AR["diff"]))
     core_transferability_diff <- (abs(V2R_b2V2["diff"]) + abs(V2b2_b2AR["diff"]))
     tail_core_transferabiility_diff <- (tail_transferability_diff - core_transferability_diff)
+    # idea -> factor by abs wt difference to include that this must be given
+    tail_core_transferabiility_diff_wt_factor <-
+      (tail_transferability_diff - core_transferability_diff) * abs(V2R_b2AR["diff"])
     wildtype_diff <- abs(V2R_b2AR["diff"])
 
     # Store the results in the list
@@ -149,6 +150,7 @@ for (name in names(tukey_test_results)) {
       tail_transferability_diff = tail_transferability_diff,
       core_transferability_diff = core_transferability_diff,
       tail_core_transferabiility_diff = tail_core_transferabiility_diff,
+      tail_core_transferabiility_diff_wt_factor = tail_core_transferabiility_diff_wt_factor,
       wildtype_diff = wildtype_diff
     )
   }
@@ -162,6 +164,8 @@ coefficients_df <- data.frame(
   tail_transferability_diff = sapply(coefficients_list, function(x) x$tail_transferability_diff),
   core_transferability_diff = sapply(coefficients_list, function(x) x$core_transferability_diff),
   tail_core_transferabiility_diff = sapply(coefficients_list, function(x) x$tail_core_transferabiility_diff),
+  tail_core_transferabiility_diff_wt_factor = sapply(coefficients_list,
+                                                     function(x) x$tail_core_transferabiility_diff_wt_factor),
   wildtype_diff = sapply(coefficients_list, function(x) x$wildtype_diff),
   stringsAsFactors = FALSE
 )
@@ -192,31 +196,41 @@ for (i in seq_along(coeff_subsets)) {
   plot_list[[plot_name]] <- barplot
 }
 
-# create scatterplot with all cell backgrounds
-costumm_shapes <- c(16, 17, 15, 18)
-flash_order <- c("FlAsH1", "FlAsH10", "FlAsH9", "FlAsH7", "FlAsH5", "FlAsH4", "FlAsH3", "FlAsH2")
 
-scatterplot <- ggplot(coefficients_df,
-                      aes(x = tail_core_transferabiility_diff,
-                          y = factor(FlAsH, levels = flash_order))) +
-  geom_vline(xintercept = 0) +
-  geom_point(aes(shape = cell_background,
-                 color = cell_background,
-                 size = 2)) +
-  xlim(c(-2, 2)) +
-  theme_classic() +
-  theme(axis.text = element_text(size = 20), # bigger axis text
-        axis.title = element_blank(),
-        axis.ticks.length = unit(0.35, "cm"),
-        legend.text = element_text(size = 14),
-        legend.title = element_blank(),
-        legend.key.size = unit(1.5, "lines"),
-        panel.border = element_rect(color = "black", fill = NA, size = 1.3),
-        panel.grid.major = element_line(color = "grey90")) +
-  guides(size = "none", # removed part of the legend for the size of the points
-         shape = guide_legend(override.aes = list(size = 5))) + # bigger symbols in legend
-  scale_shape_manual(values = costumm_shapes)
-plot_list[["all_data_scatter"]] <- scatterplot
+creat_scatterplot <- function(dataframe, coefficient_col) {
+  # create scatterplot with all cell backgrounds
+  costumm_shapes <- c(16, 17, 15, 18)
+  flash_order <- c("FlAsH1", "FlAsH10", "FlAsH9", "FlAsH7", "FlAsH5", "FlAsH4", "FlAsH3", "FlAsH2")
+
+  scatterplot <- ggplot(dataframe,
+                        aes(x = coefficient_col,
+                            y = factor(FlAsH, levels = flash_order))) +
+    geom_vline(xintercept = 0) +
+    geom_point(aes(shape = cell_background,
+                   color = cell_background,
+                   size = 2)) +
+    xlim(c(-2, 2)) +
+    theme_classic() +
+    theme(axis.text = element_text(size = 20), # bigger axis text
+          axis.title = element_blank(),
+          axis.ticks.length = unit(0.35, "cm"),
+          legend.text = element_text(size = 14),
+          legend.title = element_blank(),
+          legend.key.size = unit(1.5, "lines"),
+          panel.border = element_rect(color = "black", fill = NA, size = 1.3),
+          panel.grid.major = element_line(color = "grey90")) +
+    guides(size = "none", # removed part of the legend for the size of the points
+           shape = guide_legend(override.aes = list(size = 5))) + # bigger symbols in legend
+    scale_shape_manual(values = costumm_shapes)
+  return(scatterplot)
+}
+tail_core_scatter <- creat_scatterplot(coefficients_df, coefficients_df$tail_core_transferabiility_diff)
+plot_list[["tail_core_scatter"]] <- tail_core_scatter
+
+tail_core_wt_factor_scatter <- creat_scatterplot(coefficients_df,
+                                                 coefficients_df$tail_core_transferabiility_diff_wt_factor)
+plot_list[["tail_core_wt_factor_scatter"]] <- tail_core_wt_factor_scatter
+
 
 ### export plots
 export_plot_list <- function(plot_list, folder_name) {
