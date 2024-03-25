@@ -107,9 +107,6 @@ apply_tukey_tests <- function(data) {
 # Apply the function to your normalized data
 tukey_test_results <- apply_tukey_tests(norm_data)
 
-#### compare conf change for wildtype GPCRs with t test ####
-
-
 #### calculate tail and core coefficents ####
 ## ultimately, coefficients were calculated from absolute difference
 ## thus, only the difference given in tukey results were used and not any p values
@@ -175,6 +172,59 @@ coefficients_df <- coefficients_df %>%
   separate(combination, into = c("cell_background", "bArr", "FlAsH"), sep = "_") %>%
   mutate(across(c(cell_background, bArr, FlAsH), as.factor))
 
+#### compare conf change for wildtype GPCRs with t test ####
+# function to run the t test to each subset of data
+apply_t_test <- function(data) {
+  # only wt GPCRs should be compared
+  wt_data <- data[norm_data$bArr == "bArr2" &
+                    !norm_data$GPCR == "b2V2" &
+                    !norm_data$GPCR == "V2b2",]
+
+  # Split data into subsets based on cell_background, bArr, and FlAsH
+  data_subsets <- wt_data %>%
+    group_by(cell_background, bArr, FlAsH) %>%
+    group_split()
+  # Initialize an empty list to store the results
+  ttest_results <- list()
+
+  # Loop over each subset and apply the perform_tukey function
+  for (i in seq_along(data_subsets)) {
+    subset <- data_subsets[[i]]
+    # Use the first row of each subset to generate a name for the result based on the grouping factors
+    result_name <- paste(subset$cell_background[1], subset$bArr[1], subset$FlAsH[1], sep = "_")
+    # Perform t test and save the result with the name
+    ttest_results[[result_name]] <- t.test(subset$normalized_signal ~ subset$GPCR)
+  }
+
+  return(ttest_results)
+}
+
+t_test_results <- apply_t_test(norm_data)
+
+# save the results of the t test in coefficients_df
+# Initialize a new column in coefficients_df for p-values
+coefficients_df$sign_WT_diff <- NA
+
+for (name in names(t_test_results)) {
+  # Extract factors from the name
+  factors <- strsplit(name, "_")[[1]]
+  cell_background <- factors[1]
+  bArr <- factors[2]
+  FlAsH <- factors[3]
+
+  # Extract the p-value from the t-test result
+  p_value <- t_test_results[[name]]$p.value
+
+  # Find the row in coefficients_df that matches the factors
+  row_index <- which(coefficients_df$cell_background == cell_background &
+                       coefficients_df$bArr == bArr &
+                       coefficients_df$FlAsH == FlAsH)
+
+  # Assign the p-value to the matching row
+  coefficients_df$sign_WT_diff[row_index] <- p_value
+}
+
+
 #### create bargraphs from tail-core coeff ####
 # Split data into subsets based on cell_background
 coeff_subsets <- coefficients_df %>%
@@ -226,6 +276,7 @@ creat_scatterplot <- function(dataframe, coefficient_col) {
     scale_color_manual(values = costum_colors)
   return(scatterplot)
 }
+
 tail_core_scatter <- creat_scatterplot(coefficients_df, coefficients_df$tail_core_transferabiility_diff)
 plot_list[["tail_core_scatter"]] <- tail_core_scatter
 
