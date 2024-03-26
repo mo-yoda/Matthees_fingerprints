@@ -371,6 +371,7 @@ plot_list[["WT_sign_tiles_and_scatter"]] <- combined_plotA
 
 pvalue_scatter <- create_scatterplot(coefficients_df,
                                      "wildtype_diff",
+                                     scale_points = FALSE,
                                      set_xlim = FALSE,
                                      show_legend = FALSE)
 plot_list[["WT_sign_scatter"]] <- pvalue_scatter
