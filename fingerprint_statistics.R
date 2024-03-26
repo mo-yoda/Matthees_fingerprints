@@ -236,15 +236,20 @@ coeff_subsets <- coefficients_df %>%
 plot_list <- list()
 
 create_scatterplot <- function(dataframe, coefficient_col, set_xlim = TRUE, show_legend = TRUE) {
-  # create scatterplot with all cell backgrounds
-  costum_colors <- c("#000080", "#808080", "#F94040", "#077E97")
+  # use colors depending on the levels found in dataframe$cell_background
+  costum_colors <- c(Con = "#000080", `dQ+EV` = "#808080", `dQ+GRK2` = "#F94040", `dQ+GRK6` = "#077E97")
+  needed_colors <- costum_colors[as.character(unique(dataframe$cell_background))]
+
+  # use this sequence of FlAsH positions
   flash_order <- c("FlAsH1", "FlAsH10", "FlAsH9", "FlAsH7", "FlAsH5", "FlAsH4", "FlAsH3", "FlAsH2")
 
   scatterplot <- ggplot(dataframe,
-                        aes(x = coefficient_col,
+                        aes(x = !!sym(coefficient_col),
                             y = factor(FlAsH, levels = flash_order),
-                            size = wildtype_diff,
-                            color = cell_background)) + # size of points correspond to WT diff
+                            size = wildtype_diff, # size of points correspond to WT diff
+                            color = cell_background)
+  )
+  scatterplot <- scatterplot +
     geom_vline(xintercept = 0) +
     geom_point(alpha = 0.9) +
     scale_size(range = c(2.8, 10), name = "absolute difference V2R and b2AR") +
@@ -257,7 +262,7 @@ create_scatterplot <- function(dataframe, coefficient_col, set_xlim = TRUE, show
           legend.key.size = unit(1.5, "lines"),
           panel.border = element_rect(color = "black", fill = NA, size = 1.3),
           panel.grid.major = element_line(color = "grey90")) +
-    scale_color_manual(values = costum_colors)
+    scale_color_manual(values = needed_colors)
   # logicial variables
   if (set_xlim) {
     scatterplot <- scatterplot + xlim(c(-2, 2))
@@ -267,12 +272,14 @@ create_scatterplot <- function(dataframe, coefficient_col, set_xlim = TRUE, show
   }
   return(scatterplot)
 }
+create_scatterplot(coefficients_df[!coefficients_df$cell_background == "Con",],
+                   "tail_core_transferabiility_diff")
 
-tail_core_scatter <- create_scatterplot(coefficients_df, coefficients_df$tail_core_transferabiility_diff)
+tail_core_scatter <- create_scatterplot(coefficients_df, "tail_core_transferabiility_diff")
 plot_list[["tail_core_scatter"]] <- tail_core_scatter
 
 tail_core_wt_factor_scatter <- create_scatterplot(coefficients_df,
-                                                  coefficients_df$tail_core_transferabiility_diff_wt_factor)
+                                                  "tail_core_transferabiility_diff_wt_factor")
 plot_list[["tail_core_wt_factor_scatter"]] <- tail_core_wt_factor_scatter
 
 #### add classification tiles dependent on difference of WT GPCRs ####
