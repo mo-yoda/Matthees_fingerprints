@@ -235,7 +235,9 @@ coeff_subsets <- coefficients_df %>%
 # Initialize an empty list to store the resulting plots
 plot_list <- list()
 
-create_scatterplot <- function(dataframe, coefficient_col, set_xlim = TRUE, show_legend = TRUE) {
+create_scatterplot <- function(dataframe, coefficient_col,
+                               set_xlim = TRUE, show_legend = TRUE,
+                               scale_points = TRUE) {
   # use colors depending on the levels found in dataframe$cell_background
   costum_colors <- c(Con = "#000080", `dQ+EV` = "#808080", `dQ+GRK2` = "#F94040", `dQ+GRK6` = "#077E97")
   needed_colors <- costum_colors[as.character(unique(dataframe$cell_background))]
@@ -252,7 +254,6 @@ create_scatterplot <- function(dataframe, coefficient_col, set_xlim = TRUE, show
   scatterplot <- scatterplot +
     geom_vline(xintercept = 0) +
     geom_point(alpha = 0.9) +
-    scale_size(range = c(2.8, 10), name = "absolute difference V2R and b2AR") +
     theme_classic() +
     theme(axis.text = element_text(size = 20), # bigger axis text
           axis.title = element_blank(),
@@ -264,6 +265,13 @@ create_scatterplot <- function(dataframe, coefficient_col, set_xlim = TRUE, show
           panel.grid.major = element_line(color = "grey90")) +
     scale_color_manual(values = needed_colors)
   # logicial variables
+    if (scale_points) {
+    scatterplot <- scatterplot + scale_size(range = c(2.8, 10), name = "absolute difference V2R and b2AR")
+  } else {
+      scatterplot <- scatterplot +
+        scale_size(range = c(3.5, 3.5)) +
+        guides(size = "none")
+    }
   if (set_xlim) {
     scatterplot <- scatterplot + xlim(c(-2, 2))
   }
@@ -272,8 +280,9 @@ create_scatterplot <- function(dataframe, coefficient_col, set_xlim = TRUE, show
   }
   return(scatterplot)
 }
+
 create_scatterplot(coefficients_df[!coefficients_df$cell_background == "Con",],
-                   "tail_core_transferabiility_diff")
+                   "tail_core_transferabiility_diff", scale_points = FALSE)
 
 tail_core_scatter <- create_scatterplot(coefficients_df, "tail_core_transferabiility_diff")
 plot_list[["tail_core_scatter"]] <- tail_core_scatter
