@@ -253,12 +253,20 @@ create_scatterplot <- function(dataframe, coefficient_col,
                         aes(x = !!sym(coefficient_col),
                             y = factor(FlAsH, levels = flash_order),
                             size = wildtype_diff, # size of points correspond to WT diff
-                            color = cell_background)
-  )
+                            color = cell_background)) +
+    geom_vline(xintercept = 0)
+
+  # make sure that if not all cell_backgrounds are supposed to be displayed,
+  # others are made invisble (alpha = 0)
+  if (length(cell_backgrounds_to_show) < 4) {
+    scatterplot <- scatterplot +
+      geom_point(aes(alpha = visible)) +
+      scale_alpha_continuous(range = c(0, 1))
+  } else {
+    scatterplot <- scatterplot +
+      geom_point()
+  }
   scatterplot <- scatterplot +
-    geom_vline(xintercept = 0) +
-    geom_point(aes(alpha = visible)) +
-    scale_alpha_continuous(range = c(0, 1)) +
     scale_color_manual(values = needed_colors) +
     theme_classic() +
     theme(axis.text = element_text(size = 20), # bigger axis text
@@ -270,6 +278,7 @@ create_scatterplot <- function(dataframe, coefficient_col,
           panel.border = element_rect(color = "black", fill = NA, size = 1.3),
           panel.grid.major = element_line(color = "grey90")) +
     guides(alpha = FALSE)
+
   # logicial variables
   if (scale_points) {
     scatterplot <- scatterplot + scale_size(range = c(2.8, 10), name = "absolute difference V2R and b2AR")
