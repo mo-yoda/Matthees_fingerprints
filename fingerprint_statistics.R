@@ -15,7 +15,7 @@ lapply(wants, require, character.only = TRUE)
 # tower PC path
 path <- r"(C:\Users\monar\Google Drive\Arbeit\homeoffice\231119_EM_PROGRAM_newdata)"
 # laptop path
-# path <- r"(C:\Users\marli\Desktop\231119_EM_PROGRAM_newdata)"
+path <- r"(C:\Users\marli\Desktop\231119_EM_PROGRAM_newdata)"
 setwd(path)
 
 # Load data
@@ -250,17 +250,17 @@ for (i in seq_along(coeff_subsets)) {
 
 create_scatterplot <- function(dataframe, coefficient_col, set_xlim = TRUE, show_legend = TRUE) {
   # create scatterplot with all cell backgrounds
-  costumm_shapes <- c(16, 16, 16, 16)
   costum_colors <- c("#000080", "#808080", "#F94040", "#077E97")
   flash_order <- c("FlAsH1", "FlAsH10", "FlAsH9", "FlAsH7", "FlAsH5", "FlAsH4", "FlAsH3", "FlAsH2")
 
   scatterplot <- ggplot(dataframe,
                         aes(x = coefficient_col,
-                            y = factor(FlAsH, levels = flash_order))) +
+                            y = factor(FlAsH, levels = flash_order),
+                            size = wildtype_diff,
+                            color = cell_background)) + # size of points correspond to WT diff
     geom_vline(xintercept = 0) +
-    geom_point(aes(shape = cell_background,
-                   color = cell_background,
-                   size = 2)) +
+    geom_point(alpha = 0.9) +
+    scale_size(range = c(2.8, 10), name = "absolute difference V2R and b2AR") +
     theme_classic() +
     theme(axis.text = element_text(size = 20), # bigger axis text
           axis.title = element_blank(),
@@ -270,9 +270,6 @@ create_scatterplot <- function(dataframe, coefficient_col, set_xlim = TRUE, show
           legend.key.size = unit(1.5, "lines"),
           panel.border = element_rect(color = "black", fill = NA, size = 1.3),
           panel.grid.major = element_line(color = "grey90")) +
-    guides(size = "none", # removed part of the legend for the size of the points
-           shape = guide_legend(override.aes = list(size = 5))) + # bigger symbols in legend
-    scale_shape_manual(values = costumm_shapes) +
     scale_color_manual(values = costum_colors)
   # logicial variables
   if (set_xlim) {
