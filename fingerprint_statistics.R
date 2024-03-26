@@ -297,15 +297,35 @@ create_scatterplot <- function(dataframe, coefficient_col,
 }
 
 # create different options of scatterplots
-all_data_scatter <- create_scatterplot(coefficients_df, "tail_core_transferabiility_diff")
-plot_list[["all_data_scatter"]] <- all_data_scatter
+plot_list[["all_data_scatter_scaled"]] <-
+  create_scatterplot(coefficients_df, "tail_core_transferabiility_diff")
 
-all_data_wt_factor_scatter <- create_scatterplot(coefficients_df,
-                                                 "tail_core_transferabiility_diff_wt_factor")
-plot_list[["all_data_wt_factor_scatter"]] <- all_data_wt_factor_scatter
+plot_list[["all_data_wt_factor_scatter_scaled"]] <-
+  create_scatterplot(coefficients_df, "tail_core_transferabiility_diff_wt_factor")
 
-create_scatterplot(coefficients_df[coefficients_df$cell_background == "Con",],
-                   "tail_core_transferabiility_diff", scale_points = TRUE)
+plot_list[["all_data_wt_factor_scatter_NOTscaled"]] <-
+  create_scatterplot(coefficients_df, "tail_core_transferabiility_diff_wt_factor", scale_points = FALSE)
+
+# scaled plots for all cell backgrounds separately
+for (condition in levels(as.factor(coefficients_df$cell_background))) {
+  plot_name_temp <- paste(condition, "scatter_scaled", sep = "_")
+  plot_list[[plot_name_temp]] <- create_scatterplot(coefficients_df, "tail_core_transferabiility_diff",
+                                                    cell_backgrounds_to_show = condition)
+  plot_name_temp <- paste(condition, "scatter_NOTscaled", sep = "_")
+  plot_list[[plot_name_temp]] <- create_scatterplot(coefficients_df, "tail_core_transferabiility_diff",
+                                                    cell_backgrounds_to_show = condition, scale_points = FALSE)
+}
+
+plot_list[["Con_dQ+EV_scatter_scaled"]] <-
+  create_scatterplot(coefficients_df, "tail_core_transferabiility_diff",
+                     cell_backgrounds_to_show = c("Con", "dQ+EV"))
+plot_list[["dQ+GRK2_dQ+GRK6_scatter_NOTscaled"]] <-
+  create_scatterplot(coefficients_df, "tail_core_transferabiility_diff",
+                     cell_backgrounds_to_show = c("dQ+GRK2", "dQ+GRK6"))
+
+# all data plots for combining with wt diff
+all_data_scatter_NOTscaled <- create_scatterplot(coefficients_df, "tail_core_transferabiility_diff", scale_points = FALSE)
+plot_list[["all_data_scatter_NOTscaled"]] <- all_data_scatter_NOTscaled
 
 #### add classification tiles dependent on difference of WT GPCRs ####
 # Custom colors for cell_backgrounds and order of FlAsH levels
@@ -344,18 +364,18 @@ pvalue_tiles <- ggplot(pvalue_visualization, aes(x = cell_background,
 
 plot_list[["WT_sign_tiles"]] <- pvalue_tiles
 combined_plotA <- pvalue_tiles +
-  tail_core_scatter +
+  all_data_scatter_NOTscaled +
   plot_layout(widths = c(4, 10))
 plot_list[["WT_sign_tiles_and_scatter"]] <- combined_plotA
 
 
 pvalue_scatter <- create_scatterplot(coefficients_df,
-                                     coefficients_df$wildtype_diff,
+                                     "wildtype_diff",
                                      set_xlim = FALSE,
                                      show_legend = FALSE)
 plot_list[["WT_sign_scatter"]] <- pvalue_scatter
 combined_plotB <- pvalue_scatter +
-  tail_core_scatter +
+  all_data_scatter_NOTscaled +
   plot_layout(widths = c(4, 10))
 plot_list[["WT_sign_scatter_and_scatter"]] <- combined_plotB
 
@@ -376,5 +396,9 @@ export_plot_list <- function(plot_list, folder_name) {
   }
 }
 
-export_plot_list(plot_list, "240326_tail-core_coeff")
+# get today's date for export folder
+today_date <- Sys.Date()
+formatted_date <- format(today_date, "%Y-%m-%d")
+
+export_plot_list(plot_list, paste(formatted_date, "tail_core_coeff"))
 write_xlsx(coefficients_df, "FlAsH_core,tail_coefficients.xlsx")
