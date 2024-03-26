@@ -188,7 +188,7 @@ apply_t_test <- function(data) {
   # Initialize an empty list to store the results
   ttest_results <- list()
 
-  # Loop over each subset and apply the perform_tukey function
+  # Loop over each subset and apply the ttest
   for (i in seq_along(data_subsets)) {
     subset <- data_subsets[[i]]
     # Use the first row of each subset to generate a name for the result based on the grouping factors
@@ -234,19 +234,6 @@ coeff_subsets <- coefficients_df %>%
 
 # Initialize an empty list to store the resulting plots
 plot_list <- list()
-
-# Loop over each subset and create barplot for each cell background
-for (i in seq_along(coeff_subsets)) {
-  temp_sub <- coeff_subsets[[i]]
-  plot_name <- as.character(temp_sub$cell_background[1])
-  barplot <- ggplot(temp_sub) +
-    geom_col(aes(tail_core_transferabiility_diff, FlAsH)) +
-    xlim(c(-2, 2)) +
-    theme_classic() +
-    geom_vline(xintercept = 0)
-  plot_list[[plot_name]] <- barplot
-}
-
 
 create_scatterplot <- function(dataframe, coefficient_col, set_xlim = TRUE, show_legend = TRUE) {
   # create scatterplot with all cell backgrounds
@@ -357,5 +344,5 @@ export_plot_list <- function(plot_list, folder_name) {
   }
 }
 
-export_plot_list(plot_list, "240322_tail-core_coeff")
+export_plot_list(plot_list, "240326_tail-core_coeff")
 write_xlsx(coefficients_df, "FlAsH_core,tail_coefficients.xlsx")
