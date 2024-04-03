@@ -380,6 +380,54 @@ combined_plotB <- pvalue_scatter +
   plot_layout(widths = c(4, 10))
 plot_list[["WT_sign_scatter_and_scatter"]] <- combined_plotB
 
+### Supplementary Figure for coeff explainination ###
+# Con b2AR F10, 4 and 1 as examples
+
+# first, calculate mean of normalised replicates
+mean_norm_data <- calculate_mean_signals(norm_data)
+
+subset_example_data <- function(data, cell_background, FlAsH) {
+  subset <- data %>%
+    filter(cell_background == {{cell_background}} &
+             bArr == "bArr2" &
+             FlAsH == {{FlAsH}})
+  # {{}} needed as function parameters have the same name as column name
+  return(subset)
+}
+
+plot_example_bars <- function(data) {
+  # Extract levels for dynamic title construction
+  cell_background_level <- unique(data$cell_background)
+  FlAsH_level <- unique(data$FlAsH)
+
+  # Construct plot title dynamically
+  plot_title <- paste(cell_background_level, FlAsH_level, sep = "_")
+
+  ggplot(data, aes(x = GPCR, y = mean_signal)) +
+    geom_bar(stat = "identity", position = position_dodge()) + # Use identity stat for pre-summarized data
+    theme_classic() +
+    theme(plot.title = element_text(size = 20, face = "bold"),  # Increase plot title font size and make it bold
+          axis.title = element_text(size = 18),  # Increase axis titles font size
+          axis.text.x = element_text(size = 16),  # Increase x axis text font size
+          axis.text.y = element_text(size = 16),  # Increase y axis text font size
+          legend.title = element_text(size = 16),  # Increase legend title font size
+          legend.text = element_text(size = 14)  # Increase legend text font size
+    ) +
+    labs(title = plot_title, y = "Mean Signal") +
+    geom_hline(yintercept = 0) +
+    coord_cartesian(ylim = c(-51, 0))
+}
+
+# define which FlAsH positions should be used as examples
+example_flash <- c("FlAsH1", "FlAsH4", "FlAsH10")
+for(flash in example_flash){
+  temp_subset <- subset_example_data(mean_norm_data, "Con", flash)
+  temp_plot <- plot_example_bars(temp_subset)
+
+  plot_title <- paste("Example_bar", flash, sep = "_")
+  plot_list[[plot_title]] <- temp_plot
+}
+
 #### export plots ####
 export_plot_list <- function(plot_list, folder_name) {
   if (!dir.exists(folder_name)) {
@@ -402,4 +450,6 @@ today_date <- Sys.Date()
 formatted_date <- format(today_date, "%Y-%m-%d")
 
 export_plot_list(plot_list, paste(formatted_date, "tail_core_coeff"))
+write_xlsx(norm_data, "Normalised_data_replicates.xlsx")
+write_xlsx(mean_norm_data, "Mean_normalised_data.xlsx")
 write_xlsx(coefficients_df, "FlAsH_core,tail_coefficients.xlsx")
