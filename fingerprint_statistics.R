@@ -22,10 +22,10 @@ setwd(path)
 replicates_data_filtered <- as.data.frame(readxl::read_xlsx("Replicates_Filtered_SN_Master.xlsx"))
 
 # Function to calculate mean signals
-calculate_mean_signals <- function(data) {
+calculate_mean_signals <- function(data, signal_column) {
   data %>%
     group_by(cell_background, bArr, GPCR, FlAsH) %>%
-    summarise(mean_signal = mean(signal, na.rm = TRUE), .groups = 'drop') %>%
+    summarise(mean_signal = mean({ { signal_column } }, na.rm = TRUE), .groups = 'drop') %>%
     as.data.frame() # Ensure output is a data frame
 }
 
@@ -66,7 +66,7 @@ normalize_signals <- function(data, max_flash_means) {
 # Main function to run the normalization process
 normalize_data <- function(data) {
   # first calculate mean of each replicates
-  mean_signals <- calculate_mean_signals(data)
+  mean_signals <- calculate_mean_signals(data, signal)
   # indentify F position with max signal for each GPCR/bArr/cell_background combination
   max_flash_means <- find_max_flash_means(mean_signals)
   # normalize replicates to the max mean
@@ -380,30 +380,37 @@ combined_plotB <- pvalue_scatter +
   plot_layout(widths = c(4, 10))
 plot_list[["WT_sign_scatter_and_scatter"]] <- combined_plotB
 
-### Supplementary Figure for coeff explainination ###
+### Supplementary Figure for coeff explaination ###
 # Con b2AR F10, 4 and 1 as examples
 
 # first, calculate mean of normalised replicates
-mean_norm_data <- calculate_mean_signals(norm_data)
+mean_norm_data <- calculate_mean_signals(norm_data, normalized_signal)
 
+# function to create subset data for example barplots
 subset_example_data <- function(data, cell_background, FlAsH) {
   subset <- data %>%
-    filter(cell_background == {{cell_background}} &
+    filter(cell_background == { { cell_background } } &
              bArr == "bArr2" &
-             FlAsH == {{FlAsH}})
+             FlAsH == { { FlAsH } })
   # {{}} needed as function parameters have the same name as column name
   return(subset)
 }
 
-plot_example_bars <- function(data) {
+plot_example_bars <- function(data, normalised = TRUE) {
   # Extract levels for dynamic title construction
   cell_background_level <- unique(data$cell_background)
-  FlAsH_level <- unique(data$FlAsH)
+  FlAsH_level <- levels(as.factor(data$FlAsH))
+
+  if (length(FlAsH_level) > 1){
+    x_factor <- "FlAsH"
+  } else {
+    x_factor <- "GPCR"
+  }
 
   # Construct plot title dynamically
   plot_title <- paste(cell_background_level, FlAsH_level, sep = "_")
 
-  ggplot(data, aes(x = GPCR, y = mean_signal)) +
+  p <- ggplot(data, aes(x = .data[[x_factor]], y = mean_signal)) +
     geom_bar(stat = "identity", position = position_dodge()) + # Use identity stat for pre-summarized data
     theme_classic() +
     theme(plot.title = element_text(size = 20, face = "bold"),  # Increase plot title font size and make it bold
@@ -413,20 +420,55 @@ plot_example_bars <- function(data) {
           legend.title = element_text(size = 16),  # Increase legend title font size
           legend.text = element_text(size = 14)  # Increase legend text font size
     ) +
-    labs(title = plot_title, y = "Mean Signal") +
-    geom_hline(yintercept = 0) +
-    coord_cartesian(ylim = c(-51, 0))
+    labs(title = plot_title, y = "Mean Signal")
+  if (normalised) {
+    p <- p + coord_cartesian(ylim = c(0, 1))
+  } else {
+    p <- p + coord_cartesian(ylim = c(-54, 0)) +
+      geom_hline(yintercept = 0)
+  }
+  return(p)
 }
 
 # define which FlAsH positions should be used as examples
 example_flash <- c("FlAsH1", "FlAsH4", "FlAsH10")
-for(flash in example_flash){
+for (flash in example_flash) {
   temp_subset <- subset_example_data(mean_norm_data, "Con", flash)
   temp_plot <- plot_example_bars(temp_subset)
 
   plot_title <- paste("Example_bar", flash, sep = "_")
   plot_list[[plot_title]] <- temp_plot
 }
+
+### barplots for normalisation explaination ###
+# also, create barplots from non-normalised data to explain normalisation
+mean_NOTnorm_data <- calculate_mean_signals(norm_data, signal)
+
+fingerprint_barplot <- function(data, normalised, plot_list) {
+  for (GPCR in levels(as.factor(data$GPCR))) {
+    temp_subset <- data %>%
+      filter(cell_background == "Con" &
+               bArr == "bArr2" &
+               GPCR == { { GPCR } })
+
+    temp_plot <- plot_example_bars(temp_subset, normalised)
+
+    if (normalised) {
+        status <- "normalized"
+      } else {
+        status <- "NOTnormalized"
+      }
+    GPCR <- unique(temp_subset$GPCR)
+
+    plot_title <- paste(
+      status, GPCR, sep = "_")
+    plot_list[[plot_title]] <- temp_plot
+  }
+  return(plot_list)
+}
+
+plot_list <- fingerprint_barplot(mean_norm_data, normalised = TRUE, plot_list)
+plot_list <- fingerprint_barplot(mean_NOTnorm_data, normalised = FALSE, plot_list)
 
 #### export plots ####
 export_plot_list <- function(plot_list, folder_name) {
