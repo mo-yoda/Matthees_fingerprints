@@ -4,6 +4,7 @@ wants <- c("openxlsx",
            "tidyr",
            "ggplot2",
            "writexl",
+           "stringr",
            "patchwork", # for joining plots
            "multcompView" # for anova + tukey
 )
@@ -481,7 +482,16 @@ export_plot_list <- function(plot_list, folder_name) {
     file_names <- paste0(names(plot_list)[i], ".png")
     # Save the plot to a file
     for (file in file_names) {
+      if (str_detect(file, "scatter")){
+        width <- 7
+        height <- 7
+      } else {
+        width <- 5
+        height <- 5
+      }
       ggsave(file, plot = plot_list[[i]],
+             width = width,
+             height = height
       )
     }
   }
