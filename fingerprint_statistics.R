@@ -174,59 +174,6 @@ coefficients_df <- coefficients_df %>%
   separate(combination, into = c("cell_background", "bArr", "FlAsH"), sep = "_") %>%
   mutate(across(c(cell_background, bArr, FlAsH), as.factor))
 
-#### compare conf change for wildtype GPCRs with t test ####
-# function to run the t test to each subset of data
-apply_t_test <- function(data) {
-  # only wt GPCRs should be compared
-  wt_data <- data[norm_data$bArr == "bArr2" &
-                    !norm_data$GPCR == "b2V2" &
-                    !norm_data$GPCR == "V2b2",]
-
-  # Split data into subsets based on cell_background, bArr, and FlAsH
-  data_subsets <- wt_data %>%
-    group_by(cell_background, bArr, FlAsH) %>%
-    group_split()
-  # Initialize an empty list to store the results
-  ttest_results <- list()
-
-  # Loop over each subset and apply the ttest
-  for (i in seq_along(data_subsets)) {
-    subset <- data_subsets[[i]]
-    # Use the first row of each subset to generate a name for the result based on the grouping factors
-    result_name <- paste(subset$cell_background[1], subset$bArr[1], subset$FlAsH[1], sep = "_")
-    # Perform t test and save the result with the name
-    ttest_results[[result_name]] <- t.test(subset$normalized_signal ~ subset$GPCR)
-  }
-
-  return(ttest_results)
-}
-
-t_test_results <- apply_t_test(norm_data)
-
-# save the results of the t test in coefficients_df
-# Initialize a new column in coefficients_df for p-values
-coefficients_df$sign_WT_diff <- NA
-
-for (name in names(t_test_results)) {
-  # Extract factors from the name
-  factors <- strsplit(name, "_")[[1]]
-  cell_background <- factors[1]
-  bArr <- factors[2]
-  FlAsH <- factors[3]
-
-  # Extract the p-value from the t-test result
-  p_value <- t_test_results[[name]]$p.value
-
-  # Find the row in coefficients_df that matches the factors
-  row_index <- which(coefficients_df$cell_background == cell_background &
-                       coefficients_df$bArr == bArr &
-                       coefficients_df$FlAsH == FlAsH)
-
-  # Assign the p-value to the matching row
-  coefficients_df$sign_WT_diff[row_index] <- p_value
-}
-
-
 #### create plots from tail-core coeff ####
 # Split data into subsets based on cell_background
 coeff_subsets <- coefficients_df %>%
@@ -327,59 +274,6 @@ plot_list[["dQ+GRK2_dQ+GRK6_scatter_NOTscaled"]] <-
 # all data plots for combining with wt diff
 all_data_scatter_NOTscaled <- create_scatterplot(coefficients_df, "tail_core_transferabiility_diff", scale_points = FALSE)
 plot_list[["all_data_scatter_NOTscaled"]] <- all_data_scatter_NOTscaled
-
-#### add classification tiles dependent on difference of WT GPCRs ####
-# Custom colors for cell_backgrounds and order of FlAsH levels
-costum_colors <- c(Con = "#000080", `dQ+EV` = "#808080", `dQ+GRK2` = "#F94040", `dQ+GRK6` = "#077E97", "Outline" = "white")
-flash_order <- c("FlAsH1", "FlAsH10", "FlAsH9", "FlAsH7", "FlAsH5", "FlAsH4", "FlAsH3", "FlAsH2")
-
-# if p is significant, tile should be solid
-pvalue_visualization <- coefficients_df %>%
-  mutate(fill_status = ifelse(
-    is.na(sign_WT_diff) | sign_WT_diff >= 0.1,
-    "Outline", "Filled"))
-pvalue_visualization <- pvalue_visualization %>%
-  mutate(tile_color = ifelse(fill_status == "Filled", as.character(cell_background), NA), # Filled or NA for outline
-         outline_color = ifelse(fill_status == "Filled", as.character(cell_background), as.character(cell_background))) # Use cell_background color for outline
-
-
-# Creating the heatmap-like classification panel
-pvalue_tiles <- ggplot(pvalue_visualization, aes(x = cell_background,
-                                                 y = factor(FlAsH, levels = flash_order))) +
-  geom_tile(aes(fill = ifelse(fill_status == "Filled", as.character(cell_background), "Outline"),
-                color = ifelse(fill_status == "Filled", as.character(cell_background), as.character(cell_background))),
-            size = 1, width = 0.9, height = 0.9) +
-  scale_fill_manual(values = costum_colors) +
-  scale_color_manual(values = costum_colors) +
-  scale_x_discrete(position = "top", limits = c("Con", "dQ+EV", "dQ+GRK2", "dQ+GRK6")) +
-  scale_color_manual(values = costum_colors, name = "Cell Background") +
-  coord_fixed(ratio = 1) +
-  theme_minimal() +
-  theme(axis.title = element_blank(),
-        axis.text.y = element_text(size = 20),
-        axis.text.x = element_blank(),
-        legend.position = "none",
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank()
-  )
-
-plot_list[["WT_sign_tiles"]] <- pvalue_tiles
-combined_plotA <- pvalue_tiles +
-  all_data_scatter_NOTscaled +
-  plot_layout(widths = c(4, 10))
-plot_list[["WT_sign_tiles_and_scatter"]] <- combined_plotA
-
-
-pvalue_scatter <- create_scatterplot(coefficients_df,
-                                     "wildtype_diff",
-                                     scale_points = FALSE,
-                                     set_xlim = FALSE,
-                                     show_legend = FALSE)
-plot_list[["WT_sign_scatter"]] <- pvalue_scatter
-combined_plotB <- pvalue_scatter +
-  all_data_scatter_NOTscaled +
-  plot_layout(widths = c(4, 10))
-plot_list[["WT_sign_scatter_and_scatter"]] <- combined_plotB
 
 ### Supplementary Figure for coeff explaination ###
 # Con b2AR F10, 4 and 1 as examples
