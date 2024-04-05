@@ -132,8 +132,6 @@ for (name in names(tukey_test_results)) {
     V2b2_b2AR <- tukey_result["V2b2-b2AR",]
 
     # Calculate coefficients
-    tail_transferability_p <- (V2R_b2AR["p adj"] + V2b2_b2V2["p adj"]) + (V2R_V2b2["p adj"] + b2V2_b2AR["p adj"])
-    core_transferability_p <- (V2R_b2AR["p adj"] + V2b2_b2V2["p adj"]) + (V2R_b2V2["p adj"] + V2b2_b2AR["p adj"])
     tail_transferability_diff <- (abs(V2R_V2b2["diff"]) + abs(b2V2_b2AR["diff"]))
     core_transferability_diff <- (abs(V2R_b2V2["diff"]) + abs(V2b2_b2AR["diff"]))
     tail_core_transferabiility_diff <- (tail_transferability_diff - core_transferability_diff)
@@ -144,12 +142,9 @@ for (name in names(tukey_test_results)) {
 
     # Store the results in the list
     coefficients_list[[name]] <- list(
-      tail_transferability_p = tail_transferability_p,
-      core_transferability_p = core_transferability_p,
       tail_transferability_diff = tail_transferability_diff,
       core_transferability_diff = core_transferability_diff,
       tail_core_transferabiility_diff = tail_core_transferabiility_diff,
-      tail_core_transferabiility_diff_wt_factor = tail_core_transferabiility_diff_wt_factor,
       wildtype_diff = wildtype_diff
     )
   }
@@ -158,13 +153,9 @@ for (name in names(tukey_test_results)) {
 # Convert the coefficients list to a data frame
 coefficients_df <- data.frame(
   combination = names(coefficients_list),
-  tail_transferability_p = sapply(coefficients_list, function(x) x$tail_transferability_p),
-  core_transferability_p = sapply(coefficients_list, function(x) x$core_transferability_p),
   tail_transferability_diff = sapply(coefficients_list, function(x) x$tail_transferability_diff),
   core_transferability_diff = sapply(coefficients_list, function(x) x$core_transferability_diff),
   tail_core_transferabiility_diff = sapply(coefficients_list, function(x) x$tail_core_transferabiility_diff),
-  tail_core_transferabiility_diff_wt_factor = sapply(coefficients_list,
-                                                     function(x) x$tail_core_transferabiility_diff_wt_factor),
   wildtype_diff = sapply(coefficients_list, function(x) x$wildtype_diff),
   stringsAsFactors = FALSE
 )
@@ -296,7 +287,7 @@ plot_example_bars <- function(data, normalised = TRUE) {
   cell_background_level <- unique(data$cell_background)
   FlAsH_level <- levels(as.factor(data$FlAsH))
 
-  if (length(FlAsH_level) > 1){
+  if (length(FlAsH_level) > 1) {
     x_factor <- "FlAsH"
   } else {
     x_factor <- "GPCR"
@@ -319,7 +310,8 @@ plot_example_bars <- function(data, normalised = TRUE) {
   if (normalised) {
     p <- p + coord_cartesian(ylim = c(0, 1))
   } else {
-    p <- p + coord_cartesian(ylim = c(-54, 0)) +
+    p <- p +
+      coord_cartesian(ylim = c(-54, 0)) +
       geom_hline(yintercept = 0)
   }
   return(p)
@@ -349,10 +341,10 @@ fingerprint_barplot <- function(data, normalised, plot_list) {
     temp_plot <- plot_example_bars(temp_subset, normalised)
 
     if (normalised) {
-        status <- "normalized"
-      } else {
-        status <- "NOTnormalized"
-      }
+      status <- "normalized"
+    } else {
+      status <- "NOTnormalized"
+    }
     GPCR <- unique(temp_subset$GPCR)
 
     plot_title <- paste(
@@ -376,7 +368,7 @@ export_plot_list <- function(plot_list, folder_name) {
     file_names <- paste0(names(plot_list)[i], ".png")
     # Save the plot to a file
     for (file in file_names) {
-      if (str_detect(file, "scatter")){
+      if (str_detect(file, "scatter")) {
         width <- 7
         height <- 7
       } else {
