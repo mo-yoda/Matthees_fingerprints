@@ -4,7 +4,7 @@ wants <- c("openxlsx",
            "tidyr",
            "ggplot2",
            "writexl",
-           "stringr",
+           "stringr"
 )
 has <- wants %in% rownames(installed.packages())
 if (any(!has)) install.packages(wants[!has])
@@ -252,14 +252,10 @@ create_scatterplot <- function(dataframe, coefficient_col,
 # create different options of scatterplots
 plot_list[["all_data_scatter_scaled"]] <-
   create_scatterplot(coefficients_df, "tail_core_transferabiility_diff")
+plot_list[["all_data_scatter_NOTscaled"]] <-
+  create_scatterplot(coefficients_df, "tail_core_transferabiility_diff", scale_points = FALSE)
 
-plot_list[["all_data_wt_factor_scatter_scaled"]] <-
-  create_scatterplot(coefficients_df, "tail_core_transferabiility_diff_wt_factor")
-
-plot_list[["all_data_wt_factor_scatter_NOTscaled"]] <-
-  create_scatterplot(coefficients_df, "tail_core_transferabiility_diff_wt_factor", scale_points = FALSE)
-
-# scaled plots for all cell backgrounds separately
+# scaled and non-scaled plots for all cell backgrounds separately
 for (condition in levels(as.factor(coefficients_df$cell_background))) {
   plot_name_temp <- paste(condition, "scatter_scaled", sep = "_")
   plot_list[[plot_name_temp]] <- create_scatterplot(coefficients_df, "tail_core_transferabiility_diff",
@@ -269,20 +265,16 @@ for (condition in levels(as.factor(coefficients_df$cell_background))) {
                                                     cell_backgrounds_to_show = condition, scale_points = FALSE)
 }
 
+# scaled plots of phos vs no phos and GRK2 vs GRK6
 plot_list[["Con_dQ+EV_scatter_scaled"]] <-
   create_scatterplot(coefficients_df, "tail_core_transferabiility_diff",
                      cell_backgrounds_to_show = c("Con", "dQ+EV"))
-plot_list[["dQ+GRK2_dQ+GRK6_scatter_NOTscaled"]] <-
+plot_list[["dQ+GRK2_dQ+GRK6_scatter_scaled"]] <-
   create_scatterplot(coefficients_df, "tail_core_transferabiility_diff",
                      cell_backgrounds_to_show = c("dQ+GRK2", "dQ+GRK6"))
 
-# all data plots for combining with wt diff
-all_data_scatter_NOTscaled <- create_scatterplot(coefficients_df, "tail_core_transferabiility_diff", scale_points = FALSE)
-plot_list[["all_data_scatter_NOTscaled"]] <- all_data_scatter_NOTscaled
-
 ### Supplementary Figure for coeff explaination ###
 # Con b2AR F10, 4 and 1 as examples
-
 
 # function to create subset data for example barplots
 subset_example_data <- function(data, cell_background, FlAsH) {
