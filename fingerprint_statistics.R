@@ -167,35 +167,31 @@ apply_tukey_tests <- function(data) {
 tukey_test_results <- apply_tukey_tests(mean_norm_data)
 
 #### calculate tail and core coefficents ####
-## ultimately, coefficients were calculated from absolute difference
-## thus, only the difference given in tukey results were used and not any p values
+## coefficients are calculated from absolute difference
 
 # Initialize a list to store the coefficients for each FlAsH position where bArr == "bArr2"
 coefficients_list <- list()
 
-# Iterate through each set of results in tukey_test_results
-for (name in names(tukey_test_results)) {
+# Iterate through each set of results in difference_results
+for (name in names(difference_results)) {
   # Filter results for bArr2
   if (grepl("bArr2", name)) {
-    # Extract the Tukey HSD test result
-    tukey_result <- tukey_test_results[[name]]$`data_subset$GPCR`
+    # Extract the results for each data subset
+    diff_result <- difference_results[[name]]
 
     # Extract the necessary pairwise comparisons
-    V2R_b2AR <- tukey_result["V2R-b2AR",]
-    V2b2_b2V2 <- tukey_result["V2b2-b2V2",]
-    V2R_V2b2 <- tukey_result["V2R-V2b2",]
-    b2V2_b2AR <- tukey_result["b2V2-b2AR",]
-    V2R_b2V2 <- tukey_result["V2R-b2V2",]
-    V2b2_b2AR <- tukey_result["V2b2-b2AR",]
+    V2R_b2AR <- diff_result["V2R_b2AR"]
+    V2b2_b2V2 <- diff_result["V2b2_b2V2"]
+    V2R_V2b2 <- diff_result["V2R_V2b2"]
+    b2V2_b2AR <- diff_result["b2AR_b2V2"]
+    V2R_b2V2 <- diff_result["V2R_b2V2"]
+    V2b2_b2AR <- diff_result["V2b2_b2AR"]
 
     # Calculate coefficients
-    tail_transferability_diff <- (abs(V2R_V2b2["diff"]) + abs(b2V2_b2AR["diff"]))
-    core_transferability_diff <- (abs(V2R_b2V2["diff"]) + abs(V2b2_b2AR["diff"]))
+    tail_transferability_diff <- (abs(V2R_V2b2) + abs(b2V2_b2AR))
+    core_transferability_diff <- (abs(V2R_b2V2) + abs(V2b2_b2AR))
     tail_core_transferabiility_diff <- (tail_transferability_diff - core_transferability_diff)
-    # idea -> factor by abs wt difference to include that this must be given
-    tail_core_transferabiility_diff_wt_factor <-
-      (tail_transferability_diff - core_transferability_diff) * abs(V2R_b2AR["diff"])
-    wildtype_diff <- abs(V2R_b2AR["diff"])
+    wildtype_diff <- abs(V2R_b2AR)
 
     # Store the results in the list
     coefficients_list[[name]] <- list(
