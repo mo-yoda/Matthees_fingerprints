@@ -5,8 +5,6 @@ wants <- c("openxlsx",
            "ggplot2",
            "writexl",
            "stringr",
-           "patchwork", # for joining plots
-           "multcompView" # for anova + tukey
 )
 has <- wants %in% rownames(installed.packages())
 if (any(!has)) install.packages(wants[!has])
@@ -90,7 +88,6 @@ collect_differences <- function(data_subset) {
 
   differences_for_one_position <- c()
   for (comparison in GPCR_combinations) {
-    print(comparison)
     differences_for_one_position <- c(differences_for_one_position,
                                       calculate_differences(data_subset, comparison))
   }
@@ -118,8 +115,6 @@ apply_diff_calculation <- function(data) {
   # Loop over each subset and apply the collect_differences function
   for (i in seq_along(data_subsets)) {
     subset <- data_subsets[[i]]
-    print("-------------")
-    print(subset)
     # Use the first row of each subset to generate a name for the result based on the grouping factors
     result_name <- paste(subset$cell_background[1], subset$bArr[1], subset$FlAsH[1], sep = "_")
     # Perform difference calculation and save the result with the name
