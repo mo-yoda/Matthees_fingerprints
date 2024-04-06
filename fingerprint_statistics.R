@@ -132,40 +132,6 @@ apply_diff_calculation <- function(data) {
 # Apply function to mean normalized data
 difference_results <- apply_diff_calculation(mean_norm_data)
 
-#### ANOVA + Tukey of normalised data ####
-perform_tukey <- function(data_subset) {
-  anova <- aov(data_subset$normalized_signal ~ data_subset$GPCR)
-  tukey_result <- TukeyHSD(anova, 'data_subset$GPCR')
-  return(tukey_result)
-}
-
-# function to run the Tukey test to each subset of data
-apply_tukey_tests <- function(data) {
-  # Split data into subsets based on cell_background, bArr, and FlAsH
-  data_subsets <- data %>%
-    group_by(cell_background, bArr, FlAsH) %>%
-    group_split()
-
-  # Initialize an empty list to store the results
-  tukey_results <- list()
-
-  # Loop over each subset and apply the perform_tukey function
-  for (i in seq_along(data_subsets)) {
-    subset <- data_subsets[[i]]
-    print("-------------")
-    print(subset)
-    # Use the first row of each subset to generate a name for the result based on the grouping factors
-    result_name <- paste(subset$cell_background[1], subset$bArr[1], subset$FlAsH[1], sep = "_")
-    # Perform Tukey test and save the result with the name
-    # tukey_results[[result_name]] <- perform_tukey(subset)
-  }
-
-  return(tukey_results)
-}
-
-# Apply the function to your normalized data
-tukey_test_results <- apply_tukey_tests(mean_norm_data)
-
 #### calculate tail and core coefficents ####
 ## coefficients are calculated from absolute difference
 
