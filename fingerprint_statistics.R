@@ -75,7 +75,62 @@ normalize_data <- function(data) {
   return(normalized_data)
 }
 
+# normalize to max flash for each GPCR
 norm_data <- normalize_data(replicates_data_filtered)
+# calculate mean of normalised replicates
+mean_norm_data <- calculate_mean_signals(norm_data, normalized_signal)
+
+### calculate differences between GPCRs ###
+collect_differences <- function(data_subset) {
+  GPCRs <- unique(data_subset$GPCR)
+  # create GPCR combinations to name differences vector
+  GPCR_combinations <- sapply(
+    combn(GPCRs, 2, simplify = FALSE),
+    paste, collapse = "_")
+
+  differences_for_one_position <- c()
+  for (comparison in GPCR_combinations) {
+    print(comparison)
+    differences_for_one_position <- c(differences_for_one_position,
+                                      calculate_differences(data_subset, comparison))
+  }
+  names(differences_for_one_position) <- GPCR_combinations
+  return(differences_for_one_position)
+}
+
+calculate_differences <- function(subset, comparison) {
+  GPCRs <- strsplit(comparison, "_")
+  # strsplit creates a list, thus [[1]][1] is needed to address single GPCRs
+  diff <- subset[subset$GPCR == {{GPCRs[[1]][1]}},]$mean_signal - subset[subset$GPCR == {{GPCRs[[1]][2]}},]$mean_signal
+  return(diff)
+}
+
+# function to calculate differences between GPCRs per FlAsH position for each subset of data
+apply_diff_calculation <- function(data) {
+  # Split data into subsets based on cell_background, bArr, and FlAsH
+  data_subsets <- data %>%
+    group_by(cell_background, bArr, FlAsH) %>%
+    group_split()
+
+  # Initialize an empty list to store the results
+  diff_results <- list()
+
+  # Loop over each subset and apply the collect_differences function
+  for (i in seq_along(data_subsets)) {
+    subset <- data_subsets[[i]]
+    print("-------------")
+    print(subset)
+    # Use the first row of each subset to generate a name for the result based on the grouping factors
+    result_name <- paste(subset$cell_background[1], subset$bArr[1], subset$FlAsH[1], sep = "_")
+    # Perform difference calculation and save the result with the name
+    diff_results[[result_name]] <- collect_differences(subset)
+  }
+
+  return(diff_results)
+}
+
+# Apply function to mean normalized data
+difference_results <- apply_diff_calculation(mean_norm_data)
 
 #### ANOVA + Tukey of normalised data ####
 perform_tukey <- function(data_subset) {
@@ -97,17 +152,19 @@ apply_tukey_tests <- function(data) {
   # Loop over each subset and apply the perform_tukey function
   for (i in seq_along(data_subsets)) {
     subset <- data_subsets[[i]]
+    print("-------------")
+    print(subset)
     # Use the first row of each subset to generate a name for the result based on the grouping factors
     result_name <- paste(subset$cell_background[1], subset$bArr[1], subset$FlAsH[1], sep = "_")
     # Perform Tukey test and save the result with the name
-    tukey_results[[result_name]] <- perform_tukey(subset)
+    # tukey_results[[result_name]] <- perform_tukey(subset)
   }
 
   return(tukey_results)
 }
 
 # Apply the function to your normalized data
-tukey_test_results <- apply_tukey_tests(norm_data)
+tukey_test_results <- apply_tukey_tests(mean_norm_data)
 
 #### calculate tail and core coefficents ####
 ## ultimately, coefficients were calculated from absolute difference
@@ -269,8 +326,6 @@ plot_list[["all_data_scatter_NOTscaled"]] <- all_data_scatter_NOTscaled
 ### Supplementary Figure for coeff explaination ###
 # Con b2AR F10, 4 and 1 as examples
 
-# first, calculate mean of normalised replicates
-mean_norm_data <- calculate_mean_signals(norm_data, normalized_signal)
 
 # function to create subset data for example barplots
 subset_example_data <- function(data, cell_background, FlAsH) {
