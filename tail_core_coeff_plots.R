@@ -10,6 +10,20 @@ has <- wants %in% rownames(installed.packages())
 if (any(!has)) install.packages(wants[!has])
 lapply(wants, require, character.only = TRUE)
 
+### import data for plot creation ###
+# tower PC path
+path <- r"(C:\Users\monar\Google Drive\Arbeit\homeoffice\231119_EM_PROGRAM_newdata)"
+# laptop path
+path <- r"(C:\Users\marli\Desktop\231119_EM_PROGRAM_newdata)"
+setwd(path)
+
+# import excel sheets
+# for coefficient plots
+coefficients_df <- as.data.frame(readxl::read_xlsx("FlAsH_core,tail_coefficients.xlsx"))
+# for normalisation explanation
+mean_norm_data <- as.data.frame(readxl::read_xlsx("Mean_normalised_data.xlsx"))
+mean_NOTnorm_data <- as.data.frame(readxl::read_xlsx("Mean_NOTnormalised_data.xlsx"))
+
 #### create plots from tail-core coeff ####
 # Split data into subsets based on cell_background
 coeff_subsets <- coefficients_df %>%
@@ -164,7 +178,6 @@ for (flash in example_flash) {
 
 ### barplots for normalisation explanation ###
 # also, create barplots from non-normalised data to explain normalisation
-mean_NOTnorm_data <- calculate_mean_signals(norm_data, signal)
 
 fingerprint_barplot <- function(data, normalised, plot_list) {
   for (GPCR in levels(as.factor(data$GPCR))) {
