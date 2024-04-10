@@ -19,19 +19,19 @@ setwd(path)
 
 # import excel sheets
 # for coefficient plots
-coefficients_df <- as.data.frame(readxl::read_xlsx("FlAsH_core,tail_coefficients.xlsx"))
+CC_coefficients_df <- as.data.frame(readxl::read_xlsx("FlAsH_core,tail_coefficients.xlsx"))
 # for normalisation explanation
-mean_norm_data <- as.data.frame(readxl::read_xlsx("Mean_normalised_data.xlsx"))
-mean_NOTnorm_data <- as.data.frame(readxl::read_xlsx("Mean_NOTnormalised_data.xlsx"))
+CC_mean_norm_data <- as.data.frame(readxl::read_xlsx("CC_mean_normalised_data.xlsx"))
+CC_mean_NOTnorm_data <- as.data.frame(readxl::read_xlsx("CC_mean_NOTnormalised_data.xlsx"))
 
 #### create plots from tail-core coeff ####
 # Split data into subsets based on cell_background
-coeff_subsets <- coefficients_df %>%
+CC_coeff_subsets <- CC_coefficients_df %>%
   group_by(cell_background) %>%
   group_split()
 
 # Initialize an empty list to store the resulting plots
-plot_list <- list()
+CC_plot_list <- list()
 
 create_scatterplot <- function(dataframe, coefficient_col,
                                cell_backgrounds_to_show = c("Con", "dQ+EV", "dQ+GRK2", "dQ+GRK6"),
@@ -95,27 +95,27 @@ create_scatterplot <- function(dataframe, coefficient_col,
 }
 
 # create different options of scatterplots
-plot_list[["all_data_scatter_scaled"]] <-
-  create_scatterplot(coefficients_df, "tail_core_transferabiility_diff")
-plot_list[["all_data_scatter_NOTscaled"]] <-
-  create_scatterplot(coefficients_df, "tail_core_transferabiility_diff", scale_points = FALSE)
+CC_plot_list[["all_data_scatter_scaled"]] <-
+  create_scatterplot(CC_coefficients_df, "tail_core_transferabiility_diff")
+CC_plot_list[["all_data_scatter_NOTscaled"]] <-
+  create_scatterplot(CC_coefficients_df, "tail_core_transferabiility_diff", scale_points = FALSE)
 
 # scaled and non-scaled plots for all cell backgrounds separately
-for (condition in levels(as.factor(coefficients_df$cell_background))) {
+for (condition in levels(as.factor(CC_coefficients_df$cell_background))) {
   plot_name_temp <- paste(condition, "scatter_scaled", sep = "_")
-  plot_list[[plot_name_temp]] <- create_scatterplot(coefficients_df, "tail_core_transferabiility_diff",
-                                                    cell_backgrounds_to_show = condition)
+  CC_plot_list[[plot_name_temp]] <- create_scatterplot(CC_coefficients_df, "tail_core_transferabiility_diff",
+                                                       cell_backgrounds_to_show = condition)
   plot_name_temp <- paste(condition, "scatter_NOTscaled", sep = "_")
-  plot_list[[plot_name_temp]] <- create_scatterplot(coefficients_df, "tail_core_transferabiility_diff",
-                                                    cell_backgrounds_to_show = condition, scale_points = FALSE)
+  CC_plot_list[[plot_name_temp]] <- create_scatterplot(CC_coefficients_df, "tail_core_transferabiility_diff",
+                                                       cell_backgrounds_to_show = condition, scale_points = FALSE)
 }
 
 # scaled plots of phos vs no phos and GRK2 vs GRK6
-plot_list[["Con_dQ+EV_scatter_scaled"]] <-
-  create_scatterplot(coefficients_df, "tail_core_transferabiility_diff",
+CC_plot_list[["Con_dQ+EV_scatter_scaled"]] <-
+  create_scatterplot(CC_coefficients_df, "tail_core_transferabiility_diff",
                      cell_backgrounds_to_show = c("Con", "dQ+EV"))
-plot_list[["dQ+GRK2_dQ+GRK6_scatter_scaled"]] <-
-  create_scatterplot(coefficients_df, "tail_core_transferabiility_diff",
+CC_plot_list[["dQ+GRK2_dQ+GRK6_scatter_scaled"]] <-
+  create_scatterplot(CC_coefficients_df, "tail_core_transferabiility_diff",
                      cell_backgrounds_to_show = c("dQ+GRK2", "dQ+GRK6"))
 
 ### Supplementary Figure for coeff explanation ###
@@ -169,11 +169,11 @@ plot_example_bars <- function(data, normalised = TRUE) {
 # define which FlAsH positions should be used as examples
 example_flash <- c("FlAsH1", "FlAsH4", "FlAsH10")
 for (flash in example_flash) {
-  temp_subset <- subset_example_data(mean_norm_data, "Con", flash)
+  temp_subset <- subset_example_data(CC_mean_norm_data, "Con", flash)
   temp_plot <- plot_example_bars(temp_subset)
 
   plot_title <- paste("Example_bar", flash, sep = "_")
-  plot_list[[plot_title]] <- temp_plot
+  CC_plot_list[[plot_title]] <- temp_plot
 }
 
 ### barplots for normalisation explanation ###
@@ -202,8 +202,8 @@ fingerprint_barplot <- function(data, normalised, plot_list) {
   return(plot_list)
 }
 
-plot_list <- fingerprint_barplot(mean_norm_data, normalised = TRUE, plot_list)
-plot_list <- fingerprint_barplot(mean_NOTnorm_data, normalised = FALSE, plot_list)
+CC_plot_list <- fingerprint_barplot(CC_mean_norm_data, normalised = TRUE, CC_plot_list)
+CC_plot_list <- fingerprint_barplot(CC_mean_NOTnorm_data, normalised = FALSE, CC_plot_list)
 
 #### export plots ####
 export_plot_list <- function(plot_list, folder_name) {
@@ -235,4 +235,4 @@ export_plot_list <- function(plot_list, folder_name) {
 today_date <- Sys.Date()
 formatted_date <- format(today_date, "%Y-%m-%d")
 
-export_plot_list(plot_list, paste(formatted_date, "tail_core_coeff"))
+export_plot_list(CC_plot_list, paste(formatted_date, "CC_tail_core_coeff", sep="_"))

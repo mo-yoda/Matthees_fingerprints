@@ -76,16 +76,16 @@ setwd(path)
 replicates_data_filtered <- as.data.frame(readxl::read_xlsx("Replicates_Filtered_SN_Master.xlsx"))
 
 # normalize to max flash for each GPCR
-norm_data <- normalize_data(replicates_data_filtered)
+CC_norm_data <- normalize_data(replicates_data_filtered)
 # calculate mean of normalised replicates
-mean_norm_data <- calculate_mean_signals(norm_data, normalized_signal)
+CC_mean_norm_data <- calculate_mean_signals(CC_norm_data, normalized_signal)
 
 # export normalised fingerprint data as replicates and mean
-write_xlsx(norm_data, "Normalised_data_replicates.xlsx")
-write_xlsx(mean_norm_data, "Mean_normalised_data.xlsx")
+write_xlsx(CC_norm_data, "CC_normalised_data_replicates.xlsx")
+write_xlsx(CC_mean_norm_data, "CC_mean_normalised_data.xlsx")
 # also export mean of non normalised data for later explanation of normalisation
-mean_NOTnorm_data <- calculate_mean_signals(norm_data, signal)
-write_xlsx(mean_NOTnorm_data, "Mean_NOTnormalised_data.xlsx")
+CC_mean_NOTnorm_data <- calculate_mean_signals(CC_norm_data, signal)
+write_xlsx(CC_mean_NOTnorm_data, "CC_mean_NOTnormalised_data.xlsx")
 
 ### functions to calculate differences between GPCRs ###
 collect_differences <- function(data_subset) {
@@ -137,17 +137,17 @@ apply_diff_calculation <- function(data) {
 ## coefficients are calculated from absolute difference
 
 # GPCR differences in conf change fingerprint data
-difference_results <- apply_diff_calculation(mean_norm_data)
+CC_difference_results <- apply_diff_calculation(CC_mean_norm_data)
 
 # Initialize a list to store the coefficients for each FlAsH position where bArr == "bArr2"
-coefficients_list <- list()
+CC_coefficients_list <- list()
 
 # Iterate through each set of results in difference_results
-for (name in names(difference_results)) {
+for (name in names(CC_difference_results)) {
   # Filter results for bArr2
   if (grepl("bArr2", name)) {
     # Extract the results for each data subset
-    diff_result <- difference_results[[name]]
+    diff_result <- CC_difference_results[[name]]
 
     # Extract the necessary pairwise comparisons
     V2R_b2AR <- diff_result["V2R_b2AR"]
@@ -164,7 +164,7 @@ for (name in names(difference_results)) {
     wildtype_diff <- abs(V2R_b2AR)
 
     # Store the results in the list
-    coefficients_list[[name]] <- list(
+    CC_coefficients_list[[name]] <- list(
       tail_transferability_diff = tail_transferability_diff,
       core_transferability_diff = core_transferability_diff,
       tail_core_transferabiility_diff = tail_core_transferabiility_diff,
@@ -174,19 +174,19 @@ for (name in names(difference_results)) {
 }
 
 # Convert the coefficients list to a data frame
-coefficients_df <- data.frame(
-  combination = names(coefficients_list),
-  tail_transferability_diff = sapply(coefficients_list, function(x) x$tail_transferability_diff),
-  core_transferability_diff = sapply(coefficients_list, function(x) x$core_transferability_diff),
-  tail_core_transferabiility_diff = sapply(coefficients_list, function(x) x$tail_core_transferabiility_diff),
-  wildtype_diff = sapply(coefficients_list, function(x) x$wildtype_diff),
+CC_coefficients_df <- data.frame(
+  combination = names(CC_coefficients_list),
+  tail_transferability_diff = sapply(CC_coefficients_list, function(x) x$tail_transferability_diff),
+  core_transferability_diff = sapply(CC_coefficients_list, function(x) x$core_transferability_diff),
+  tail_core_transferabiility_diff = sapply(CC_coefficients_list, function(x) x$tail_core_transferabiility_diff),
+  wildtype_diff = sapply(CC_coefficients_list, function(x) x$wildtype_diff),
   stringsAsFactors = FALSE
 )
 
 # Split the combination column into separate factors
-coefficients_df <- coefficients_df %>%
+CC_coefficients_df <- CC_coefficients_df %>%
   separate(combination, into = c("cell_background", "bArr", "FlAsH"), sep = "_") %>%
   mutate(across(c(cell_background, bArr, FlAsH), as.factor))
 
 # export dataframe with fingerprint coefficients
-write_xlsx(coefficients_df, "FlAsH_core,tail_coefficients.xlsx")
+write_xlsx(CC_coefficients_df, "FlAsH_core,tail_coefficients.xlsx")
