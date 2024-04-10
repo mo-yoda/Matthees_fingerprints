@@ -10,16 +10,7 @@ has <- wants %in% rownames(installed.packages())
 if (any(!has)) install.packages(wants[!has])
 lapply(wants, require, character.only = TRUE)
 
-#### data normalisation ####
-# tower PC path
-path <- r"(C:\Users\monar\Google Drive\Arbeit\homeoffice\231119_EM_PROGRAM_newdata)"
-# laptop path
-path <- r"(C:\Users\marli\Desktop\231119_EM_PROGRAM_newdata)"
-setwd(path)
-
-# Load data
-replicates_data_filtered <- as.data.frame(readxl::read_xlsx("Replicates_Filtered_SN_Master.xlsx"))
-
+### functions for fingerprint data normalisation ###
 # Function to calculate mean signals
 calculate_mean_signals <- function(data, signal_column) {
   data %>%
@@ -73,12 +64,23 @@ normalize_data <- function(data) {
   return(normalized_data)
 }
 
+### import data ###
+# tower PC path
+path <- r"(C:\Users\monar\Google Drive\Arbeit\homeoffice\231119_EM_PROGRAM_newdata)"
+# laptop path
+path <- r"(C:\Users\marli\Desktop\231119_EM_PROGRAM_newdata)"
+setwd(path)
+
+#### fingerprint data normalisation ####
+# Load data
+replicates_data_filtered <- as.data.frame(readxl::read_xlsx("Replicates_Filtered_SN_Master.xlsx"))
+
 # normalize to max flash for each GPCR
 norm_data <- normalize_data(replicates_data_filtered)
 # calculate mean of normalised replicates
 mean_norm_data <- calculate_mean_signals(norm_data, normalized_signal)
 
-### calculate differences between GPCRs ###
+### functions to calculate differences between GPCRs ###
 collect_differences <- function(data_subset) {
   GPCRs <- unique(data_subset$GPCR)
   # create GPCR combinations to name differences vector
@@ -124,11 +126,11 @@ apply_diff_calculation <- function(data) {
   return(diff_results)
 }
 
-# Apply function to mean normalized data
-difference_results <- apply_diff_calculation(mean_norm_data)
-
 #### calculate tail and core coefficents ####
 ## coefficients are calculated from absolute difference
+
+# GPCR differences in conf change fingerprint data
+difference_results <- apply_diff_calculation(mean_norm_data)
 
 # Initialize a list to store the coefficients for each FlAsH position where bArr == "bArr2"
 coefficients_list <- list()
@@ -273,7 +275,7 @@ plot_list[["dQ+GRK2_dQ+GRK6_scatter_scaled"]] <-
   create_scatterplot(coefficients_df, "tail_core_transferabiility_diff",
                      cell_backgrounds_to_show = c("dQ+GRK2", "dQ+GRK6"))
 
-### Supplementary Figure for coeff explaination ###
+### Supplementary Figure for coeff explanation ###
 # Con b2AR F10, 4 and 1 as examples
 
 # function to create subset data for example barplots
@@ -331,7 +333,7 @@ for (flash in example_flash) {
   plot_list[[plot_title]] <- temp_plot
 }
 
-### barplots for normalisation explaination ###
+### barplots for normalisation explanation ###
 # also, create barplots from non-normalised data to explain normalisation
 mean_NOTnorm_data <- calculate_mean_signals(norm_data, signal)
 
