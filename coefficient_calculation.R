@@ -79,9 +79,13 @@ replicates_data_filtered <- as.data.frame(readxl::read_xlsx("Replicates_Filtered
 norm_data <- normalize_data(replicates_data_filtered)
 # calculate mean of normalised replicates
 mean_norm_data <- calculate_mean_signals(norm_data, normalized_signal)
+
 # export normalised fingerprint data as replicates and mean
 write_xlsx(norm_data, "Normalised_data_replicates.xlsx")
 write_xlsx(mean_norm_data, "Mean_normalised_data.xlsx")
+# also export mean of non normalised data for later explanation of normalisation
+mean_NOTnorm_data <- calculate_mean_signals(norm_data, signal)
+write_xlsx(mean_NOTnorm_data, "Mean_NOTnormalised_data.xlsx")
 
 ### functions to calculate differences between GPCRs ###
 collect_differences <- function(data_subset) {
