@@ -71,10 +71,12 @@ path <- r"(C:\Users\monar\Google Drive\Arbeit\homeoffice\231119_EM_PROGRAM_newda
 path <- r"(C:\Users\marli\Desktop\231119_EM_PROGRAM_newdata)"
 setwd(path)
 
-#### fingerprint data normalisation ####
-# Load data
+# fingerint data
 replicates_data_filtered <- as.data.frame(readxl::read_xlsx("Replicates_Filtered_SN_Master.xlsx"))
+# remaining assays
+assays_data <- as.data.frame(readxl::read_xlsx("240402_data-Fig6-notCC_for-MR.xlsx"))
 
+#### fingerprint data normalisation ####
 # normalize to max flash for each GPCR
 CC_norm_data <- normalize_data(replicates_data_filtered)
 # calculate mean of normalised replicates
@@ -111,11 +113,16 @@ calculate_differences <- function(subset, comparison) {
   return(diff)
 }
 
-# function to calculate differences between GPCRs per FlAsH position for each subset of data
+# function to calculate differences between GPCRs for each subset of data
 apply_diff_calculation <- function(data) {
-  # Split data into subsets based on cell_background, bArr, and FlAsH
+  # get factors of data
+  all_factors <- names(data)
+  # factor apart from GPCR or mean_signal
+  factors <- all_factors[!all_factors %in% c("mean_signal", "GPCR")]
+
+  # Split data into subsets based on the factors above
   data_subsets <- data %>%
-    group_by(cell_background, bArr, FlAsH) %>%
+    group_by(across(all_of(factors))) %>%
     group_split()
 
   # Initialize an empty list to store the results
@@ -124,8 +131,10 @@ apply_diff_calculation <- function(data) {
   # Loop over each subset and apply the collect_differences function
   for (i in seq_along(data_subsets)) {
     subset <- data_subsets[[i]]
-    # Use the first row of each subset to generate a name for the result based on the grouping factors
-    result_name <- paste(subset$cell_background[1], subset$bArr[1], subset$FlAsH[1], sep = "_")
+    # Dynamically construct result_name by iterating over factors
+    result_name_parts <- sapply(factors, function(factor) subset[[factor]][1])
+    result_name <- paste(result_name_parts, collapse = "_")
+    print(result_name)
     # Perform difference calculation and save the result with the name
     diff_results[[result_name]] <- collect_differences(subset)
   }
@@ -138,6 +147,10 @@ apply_diff_calculation <- function(data) {
 
 # GPCR differences in conf change fingerprint data
 CC_difference_results <- apply_diff_calculation(CC_mean_norm_data)
+
+# GPCR differences in all other assays
+ignore_cols <- c("Error", "comment")
+assays_difference_results <- apply_diff_calculation(assays_data[,!names(assays_data) %in% ignore_cols])
 
 # Initialize a list to store the coefficients for each FlAsH position where bArr == "bArr2"
 CC_coefficients_list <- list()
