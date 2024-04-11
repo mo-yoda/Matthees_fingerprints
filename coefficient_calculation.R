@@ -91,7 +91,7 @@ write_xlsx(CC_mean_NOTnorm_data, "CC_mean_NOTnormalised_data.xlsx")
 
 ### functions to calculate differences between GPCRs ###
 collect_differences <- function(data_subset) {
-  GPCRs <- unique(data_subset$GPCR)
+  GPCRs <- sort(unique(data_subset$GPCR)) # sort alphabetically to prevent differing order of levels
   # create GPCR combinations to name differences vector
   GPCR_combinations <- sapply(
     combn(GPCRs, 2, simplify = FALSE),
@@ -109,7 +109,9 @@ collect_differences <- function(data_subset) {
 calculate_differences <- function(subset, comparison) {
   GPCRs <- strsplit(comparison, "_")
   # strsplit creates a list, thus [[1]][1] is needed to address single GPCRs
-  diff <- subset[subset$GPCR == {{GPCRs[[1]][1]}},]$mean_signal - subset[subset$GPCR == {{GPCRs[[1]][2]}},]$mean_signal
+  diff <- subset[
+    subset$GPCR == { { GPCRs[[1]][1] } },]$mean_signal -
+    subset[subset$GPCR == { { GPCRs[[1]][2] } },]$mean_signal
   return(diff)
 }
 
@@ -142,64 +144,84 @@ apply_diff_calculation <- function(data) {
   return(diff_results)
 }
 
-#### calculate tail and core coefficents ####
-## coefficients are calculated from absolute difference
-
+#### calculate absolute differences between GPCRs ####
 # GPCR differences in conf change fingerprint data
 CC_difference_results <- apply_diff_calculation(CC_mean_norm_data)
 
 # GPCR differences in all other assays
 ignore_cols <- c("Error", "comment")
-assays_difference_results <- apply_diff_calculation(assays_data[,!names(assays_data) %in% ignore_cols])
+assays_difference_results <- apply_diff_calculation(assays_data[, !names(assays_data) %in% ignore_cols])
 
-# Initialize a list to store the coefficients for each FlAsH position where bArr == "bArr2"
-CC_coefficients_list <- list()
+#### functions to calculate tail and core coefficents ####
+# coefficients are calculated from absolute difference
+tailcore_coeff_from_diffs <- function(diff_result) {
+  # Extract the necessary pairwise differences
+  V2R_b2AR <- diff_result["b2AR_V2R"]
+  V2R_V2b2 <- diff_result["V2b2_V2R"]
+  b2V2_b2AR <- diff_result["b2AR_b2V2"]
+  V2R_b2V2 <- diff_result["b2V2_V2R"]
+  V2b2_b2AR <- diff_result["b2AR_V2b2"]
 
-# Iterate through each set of results in difference_results
-for (name in names(CC_difference_results)) {
-  # Filter results for bArr2
-  if (grepl("bArr2", name)) {
-    # Extract the results for each data subset
-    diff_result <- CC_difference_results[[name]]
+  # Calculate coefficients from absolute differences
+  tail_transferability_diff <- (abs(V2R_V2b2) + abs(b2V2_b2AR))
+  core_transferability_diff <- (abs(V2R_b2V2) + abs(V2b2_b2AR))
+  tail_core_transferabiility_diff <- (tail_transferability_diff - core_transferability_diff)
+  wildtype_diff <- abs(V2R_b2AR)
 
-    # Extract the necessary pairwise comparisons
-    V2R_b2AR <- diff_result["V2R_b2AR"]
-    V2b2_b2V2 <- diff_result["V2b2_b2V2"]
-    V2R_V2b2 <- diff_result["V2R_V2b2"]
-    b2V2_b2AR <- diff_result["b2AR_b2V2"]
-    V2R_b2V2 <- diff_result["V2R_b2V2"]
-    V2b2_b2AR <- diff_result["V2b2_b2AR"]
-
-    # Calculate coefficients
-    tail_transferability_diff <- (abs(V2R_V2b2) + abs(b2V2_b2AR))
-    core_transferability_diff <- (abs(V2R_b2V2) + abs(V2b2_b2AR))
-    tail_core_transferabiility_diff <- (tail_transferability_diff - core_transferability_diff)
-    wildtype_diff <- abs(V2R_b2AR)
-
-    # Store the results in the list
-    CC_coefficients_list[[name]] <- list(
-      tail_transferability_diff = tail_transferability_diff,
-      core_transferability_diff = core_transferability_diff,
-      tail_core_transferabiility_diff = tail_core_transferabiility_diff,
-      wildtype_diff = wildtype_diff
-    )
-  }
+  # Return a named list of the calculated coefficients
+  return(list(
+    tail_transferability_diff = tail_transferability_diff,
+    core_transferability_diff = core_transferability_diff,
+    tail_core_transferabiility_diff = tail_core_transferabiility_diff,
+    wildtype_diff = wildtype_diff
+  ))
 }
 
-# Convert the coefficients list to a data frame
-CC_coefficients_df <- data.frame(
-  combination = names(CC_coefficients_list),
-  tail_transferability_diff = sapply(CC_coefficients_list, function(x) x$tail_transferability_diff),
-  core_transferability_diff = sapply(CC_coefficients_list, function(x) x$core_transferability_diff),
-  tail_core_transferabiility_diff = sapply(CC_coefficients_list, function(x) x$tail_core_transferabiility_diff),
-  wildtype_diff = sapply(CC_coefficients_list, function(x) x$wildtype_diff),
-  stringsAsFactors = FALSE
-)
+# converts coeff list to dataframe
+list_to_df <- function(coefficients_list) {
+  df <- data.frame(
+    experiment = names(coefficients_list),
+    tail_transferability_diff = sapply(coefficients_list, function(x) x$tail_transferability_diff),
+    core_transferability_diff = sapply(coefficients_list, function(x) x$core_transferability_diff),
+    tail_core_transferabiility_diff = sapply(coefficients_list, function(x) x$tail_core_transferabiility_diff),
+    wildtype_diff = sapply(coefficients_list, function(x) x$wildtype_diff),
+    stringsAsFactors = FALSE
+  )
+  if (any(str_detect(df$experiment, "FlAsH"))) {
+    df <- df %>%
+      tidyr::separate(experiment, into = c("cell_background", "bArr", "FlAsH"), sep = "_") %>%
+      mutate(across(c(cell_background, bArr, FlAsH), as.factor))
+  }else {
+    df <- df %>%
+      tidyr::separate(experiment, into = c("experiment", "cell_background"), sep = "_") %>%
+      mutate(across(c(experiment, cell_background), as.factor))
+  }
+  return(df)
+}
 
-# Split the combination column into separate factors
-CC_coefficients_df <- CC_coefficients_df %>%
-  separate(combination, into = c("cell_background", "bArr", "FlAsH"), sep = "_") %>%
-  mutate(across(c(cell_background, bArr, FlAsH), as.factor))
+apply_coeff_calculation <- function(abs_difference_results) {
+  # Initialize a list to store the coefficients
+  coefficients_list <- list()
 
-# export dataframe with fingerprint coefficients
+  # Iterate through each set of results in difference_results
+  for (name in names(abs_difference_results)) {
+    # do not consider bArr1 experiments for now (b2AR condition missing)
+    if (!grepl("bArr1", name)) {
+      # Extract the results for each data subset and process it
+      diff_result <- abs_difference_results[[name]]
+      coefficients_list[[name]] <- tailcore_coeff_from_diffs(diff_result)
+    }
+  }
+
+  # Convert the coefficients list to a data frame
+  coefficients_df <- list_to_df(coefficients_list)
+
+  return(coefficients_df)
+}
+
+CC_coefficients_df <- apply_coeff_calculation(CC_difference_results)
+assays_coefficients_df <- apply_coeff_calculation(assays_difference_results)
+
+# export dataframes with coefficients
 write_xlsx(CC_coefficients_df, "FlAsH_core,tail_coefficients.xlsx")
+write_xlsx(assays_coefficients_df, "Assays_core,tail_coefficients.xlsx")
