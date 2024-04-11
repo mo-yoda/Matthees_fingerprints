@@ -38,7 +38,7 @@ find_max_flash_means <- function(mean_signals) {
 }
 
 # Function to normalize signals and add norm_to column
-normalize_signals <- function(data, max_flash_means) {
+normalize_flash_signals <- function(data, max_flash_means) {
   normalized_data <- data %>%
     left_join(max_flash_means, by = c("cell_background", "bArr", "GPCR")) %>%
     select(-ID) %>% # remove this column, not needed
@@ -54,13 +54,13 @@ normalize_signals <- function(data, max_flash_means) {
 }
 
 # Main function to run the normalization process
-normalize_data <- function(data) {
+normalize_flash_data <- function(data) {
   # first calculate mean of each replicates
   mean_signals <- calculate_mean_signals(data, signal)
   # indentify F position with max signal for each GPCR/bArr/cell_background combination
   max_flash_means <- find_max_flash_means(mean_signals)
   # normalize replicates to the max mean
-  normalized_data <- normalize_signals(data, max_flash_means)
+  normalized_data <- normalize_flash_signals(data, max_flash_means)
   return(normalized_data)
 }
 
@@ -74,11 +74,11 @@ setwd(path)
 # fingerint data
 replicates_data_filtered <- as.data.frame(readxl::read_xlsx("Replicates_Filtered_SN_Master.xlsx"))
 # remaining assays
-assays_data <- as.data.frame(readxl::read_xlsx("240402_data-Fig6-notCC_for-MR.xlsx"))
+assays_data <- as.data.frame(readxl::read_xlsx("240402_data-Fig6-notCC_for-MR_corr.xlsx"))
 
 #### fingerprint data normalisation ####
 # normalize to max flash for each GPCR
-CC_norm_data <- normalize_data(replicates_data_filtered)
+CC_norm_data <- normalize_flash_data(replicates_data_filtered)
 # calculate mean of normalised replicates
 CC_mean_norm_data <- calculate_mean_signals(CC_norm_data, normalized_signal)
 
