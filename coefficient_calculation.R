@@ -71,9 +71,7 @@ find_max_assay_means <- function(data) {
   max_signals_per_experiment <- data %>%
     group_by(experiment) %>%
     # if later cell_background should be considered for normalisation, add cell_background to this group_by()
-    summarize(max_signal = max(mean_signal, na.rm = TRUE), .groups = 'drop')
-
-  print(max_signals_per_experiment)
+    summarize(max_signal = max(signal, na.rm = TRUE), .groups = 'drop')
 
   return(max_signals_per_experiment)
 }
@@ -81,7 +79,7 @@ find_max_assay_means <- function(data) {
 normalize_assay_signals <- function(data, max_signals_per_experiment) {
   normalized_data <- data %>%
     left_join(max_signals_per_experiment, by = c("experiment")) %>%
-    mutate(normalized_signal = ifelse(max_signal == 0, 0, mean_signal / max_signal)) # %>%
+    mutate(mean_signal = ifelse(max_signal == 0, 0, signal / max_signal)) # %>%
     # select(-max_signal)  # Removing the max_signal column after normalization
 
   return(normalized_data)
@@ -185,9 +183,9 @@ apply_diff_calculation <- function(data) {
 # GPCR differences in conf change fingerprint data
 CC_difference_results <- apply_diff_calculation(CC_mean_norm_data)
 
-# GPCR differences in all other assays
-ignore_cols <- c("Error", "comment")
-assays_difference_results <- apply_diff_calculation(assays_data[, !names(assays_data) %in% ignore_cols])
+# GPCR differences in all other assays, use normalised data
+ignore_cols <- c("Error", "comment", "max_signal", "signal")
+assays_difference_results <- apply_diff_calculation(norm_assay_data[, !names(norm_assay_data) %in% ignore_cols])
 
 #### functions to calculate tail and core coefficents ####
 # coefficients are calculated from absolute difference
