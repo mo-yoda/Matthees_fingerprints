@@ -10,7 +10,7 @@ has <- wants %in% rownames(installed.packages())
 if (any(!has)) install.packages(wants[!has])
 lapply(wants, require, character.only = TRUE)
 
-### functions for fingerprint data normalisation ###
+#### functions for fingerprint data normalisation ####
 # Function to calculate mean signals
 calculate_mean_signals <- function(data, signal_column) {
   data %>%
@@ -64,7 +64,41 @@ normalize_flash_data <- function(data) {
   return(normalized_data)
 }
 
-### import data ###
+#### functions for assay data normalisation ####
+find_max_assay_means <- function(data) {
+  data <- as.data.frame(data)
+
+  max_signals_per_experiment <- data %>%
+    group_by(experiment) %>%
+    # if later cell_background should be considered for normalisation, add cell_background to this group_by()
+    summarize(max_signal = max(mean_signal, na.rm = TRUE), .groups = 'drop')
+
+  print(max_signals_per_experiment)
+
+  return(max_signals_per_experiment)
+}
+
+normalize_assay_signals <- function(data, max_signals_per_experiment) {
+  normalized_data <- data %>%
+    left_join(max_signals_per_experiment, by = c("experiment")) %>%
+    mutate(normalized_signal = ifelse(max_signal == 0, 0, mean_signal / max_signal)) # %>%
+    # select(-max_signal)  # Removing the max_signal column after normalization
+
+  return(normalized_data)
+}
+
+normalize_assay_data <- function(data) {
+  # Identify the max signal for each experiment
+  max_assay_means <- find_max_assay_means(data)
+  print(max_assay_means)
+
+  # Normalize signals to the max mean within each experiment
+  normalized_data <- normalize_assay_signals(data, max_assay_means)
+
+  return(normalized_data)
+}
+
+#### import data ####
 # tower PC path
 path <- r"(C:\Users\monar\Google Drive\Arbeit\homeoffice\231119_EM_PROGRAM_newdata)"
 # laptop path
@@ -76,20 +110,23 @@ replicates_data_filtered <- as.data.frame(readxl::read_xlsx("Replicates_Filtered
 # remaining assays
 assays_data <- as.data.frame(readxl::read_xlsx("240402_data-Fig6-notCC_for-MR_corr.xlsx"))
 
-#### fingerprint data normalisation ####
-# normalize to max flash for each GPCR
-CC_norm_data <- normalize_flash_data(replicates_data_filtered)
-# calculate mean of normalised replicates
+#### data normalisation ####
+# calculate mean of normalised replicates of conformational change fingerprint data
 CC_mean_norm_data <- calculate_mean_signals(CC_norm_data, normalized_signal)
+# normalisation of assay data
+norm_assay_data <- normalize_assay_data(assays_data)
 
 # export normalised fingerprint data as replicates and mean
+CC_norm_data <- normalize_flash_data(replicates_data_filtered)
 write_xlsx(CC_norm_data, "CC_normalised_data_replicates.xlsx")
 write_xlsx(CC_mean_norm_data, "CC_mean_normalised_data.xlsx")
 # also export mean of non normalised data for later explanation of normalisation
 CC_mean_NOTnorm_data <- calculate_mean_signals(CC_norm_data, signal)
 write_xlsx(CC_mean_NOTnorm_data, "CC_mean_NOTnormalised_data.xlsx")
+# export normalised assay data
+write_xlsx(norm_assay_data, "Normalised_assay_data.xlsx")
 
-### functions to calculate differences between GPCRs ###
+#### functions to calculate differences between GPCRs ####
 collect_differences <- function(data_subset) {
   GPCRs <- sort(unique(data_subset$GPCR)) # sort alphabetically to prevent differing order of levels
   # create GPCR combinations to name differences vector
