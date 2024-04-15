@@ -26,10 +26,6 @@ CC_mean_norm_data <- as.data.frame(readxl::read_xlsx("CC_mean_normalised_data.xl
 CC_mean_NOTnorm_data <- as.data.frame(readxl::read_xlsx("CC_mean_NOTnormalised_data.xlsx"))
 
 #### create plots from tail-core coeff ####
-# Initialize an empty list to store the resulting plots
-CC_plot_list <- list()
-Assay_plot_list <- list()
-
 create_scatterplot <- function(dataframe, coefficient_col = "tail_core_transferabiility_diff",
                                cell_backgrounds_to_show = c("Con", "dQ+EV", "dQ+GRK2", "dQ+GRK6"),
                                set_xlim = TRUE, show_legend = TRUE,
@@ -103,6 +99,9 @@ create_scatterplot <- function(dataframe, coefficient_col = "tail_core_transfera
   }
   return(scatterplot)
 }
+# Initialize an empty list to store the resulting plots
+CC_plot_list <- list()
+Assay_plot_list <- list()
 
 # create different options of scatterplots
 # assay data
@@ -110,7 +109,7 @@ Assay_plot_list[["assay_all_data_scatter"]] <- create_scatterplot(assays_coeffic
 # conformational change data (CC)
 CC_plot_list[["CC_all_data_scatter"]] <- create_scatterplot(CC_coefficients_df)
 
-# scaled plots for all cell backgrounds separately
+# scaled plots for cell backgrounds separately
 split_cell_background <- list(c("Con", "dQ+EV"), c("dQ+GRK2", "dQ+GRK6"))
 cell_backgrounds <- as.list(unique(CC_coefficients_df$cell_background))
 conditions <- c(cell_backgrounds, split_cell_background)
@@ -212,6 +211,7 @@ CC_plot_list <- fingerprint_barplot(CC_mean_NOTnorm_data, normalised = FALSE, CC
 
 #### export plots ####
 export_plot_list <- function(plot_list, folder_name) {
+  # create folder, if it does not exist yet
   if (!dir.exists(folder_name)) {
     dir.create(folder_name)
   }
@@ -222,12 +222,15 @@ export_plot_list <- function(plot_list, folder_name) {
     # Save the plot to a file
     for (file in file_names) {
       if (str_detect(file, "CC")) {
+        # sizing for conformational change sensors
         width <- 7
         height <- 7
       } else if(str_detect(file, "assay")){
+        # sizing for assay scatter plots
         width <- 10
         height <- 7
       } else {
+        # sizing of barcharts
         width <- 5
         height <- 5
       }
@@ -243,7 +246,9 @@ export_plot_list <- function(plot_list, folder_name) {
 today_date <- Sys.Date()
 formatted_date <- format(today_date, "%Y-%m-%d")
 
+# export CC-based plots
 setwd(path)
 export_plot_list(CC_plot_list, paste(formatted_date, "CC_tail_core_coeff", sep = "_"))
+# export other assay data plots
 setwd(path)
 export_plot_list(Assay_plot_list, paste(formatted_date, "Assay_tail_core_coeff", sep = "_"))
