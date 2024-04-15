@@ -30,7 +30,7 @@ CC_mean_NOTnorm_data <- as.data.frame(readxl::read_xlsx("CC_mean_NOTnormalised_d
 CC_plot_list <- list()
 Assay_plot_list <- list()
 
-create_scatterplot <- function(dataframe, coefficient_col,
+create_scatterplot <- function(dataframe, coefficient_col = "tail_core_transferabiility_diff",
                                cell_backgrounds_to_show = c("Con", "dQ+EV", "dQ+GRK2", "dQ+GRK6"),
                                set_xlim = TRUE, show_legend = TRUE,
                                scale_points = TRUE) {
@@ -104,34 +104,26 @@ create_scatterplot <- function(dataframe, coefficient_col,
   return(scatterplot)
 }
 
-# works now! - write commit + include creation of desired plots
-create_scatterplot(assays_coefficients_df,"tail_core_transferabiility_diff")
-
 # create different options of scatterplots
-CC_plot_list[["all_data_scatter_scaled"]] <-
-  create_scatterplot(CC_coefficients_df, "tail_core_transferabiility_diff")
-CC_plot_list[["all_data_scatter_NOTscaled"]] <-
-  create_scatterplot(CC_coefficients_df, "tail_core_transferabiility_diff", scale_points = FALSE)
+# assay data
+Assay_plot_list[["assay_all_data_scatter"]] <- create_scatterplot(assays_coefficients_df)
+# conformational change data (CC)
+CC_plot_list[["CC_all_data_scatter"]] <- create_scatterplot(CC_coefficients_df)
 
-# scaled and non-scaled plots for all cell backgrounds separately
-for (condition in levels(as.factor(CC_coefficients_df$cell_background))) {
-  plot_name_temp <- paste(condition, "scatter_scaled", sep = "_")
-  CC_plot_list[[plot_name_temp]] <- create_scatterplot(CC_coefficients_df, "tail_core_transferabiility_diff",
-                                                       cell_backgrounds_to_show = condition)
-  plot_name_temp <- paste(condition, "scatter_NOTscaled", sep = "_")
-  CC_plot_list[[plot_name_temp]] <- create_scatterplot(CC_coefficients_df, "tail_core_transferabiility_diff",
-                                                       cell_backgrounds_to_show = condition, scale_points = FALSE)
+# scaled plots for all cell backgrounds separately
+split_cell_background <- list(c("Con", "dQ+EV"), c("dQ+GRK2", "dQ+GRK6"))
+cell_backgrounds <- as.list(unique(CC_coefficients_df$cell_background))
+conditions <- c(cell_backgrounds, split_cell_background)
+
+for (condition in conditions) {
+  plot_name_temp <- paste(
+    paste(unlist(condition), collapse = "_"),
+    "scatter", sep = "_")
+  CC_plot_list[[paste("CC", plot_name_temp, sep="_")]] <- create_scatterplot(CC_coefficients_df, cell_backgrounds_to_show = condition)
+  Assay_plot_list[[paste("assay", plot_name_temp, sep="_")]] <- create_scatterplot(assays_coefficients_df, cell_backgrounds_to_show = condition)
 }
 
-# scaled plots of phos vs no phos and GRK2 vs GRK6
-CC_plot_list[["Con_dQ+EV_scatter_scaled"]] <-
-  create_scatterplot(CC_coefficients_df, "tail_core_transferabiility_diff",
-                     cell_backgrounds_to_show = c("Con", "dQ+EV"))
-CC_plot_list[["dQ+GRK2_dQ+GRK6_scatter_scaled"]] <-
-  create_scatterplot(CC_coefficients_df, "tail_core_transferabiility_diff",
-                     cell_backgrounds_to_show = c("dQ+GRK2", "dQ+GRK6"))
-
-### Supplementary Figure for coeff explanation ###
+#### Supplementary Figure for coeff explanation ####
 # Con b2AR F10, 4 and 1 as examples
 
 # function to create subset data for example barplots
@@ -189,7 +181,7 @@ for (flash in example_flash) {
   CC_plot_list[[plot_title]] <- temp_plot
 }
 
-### barplots for normalisation explanation ###
+#### barplots for normalisation explanation ####
 # also, create barplots from non-normalised data to explain normalisation
 
 fingerprint_barplot <- function(data, normalised, plot_list) {
@@ -229,8 +221,11 @@ export_plot_list <- function(plot_list, folder_name) {
     file_names <- paste0(names(plot_list)[i], ".png")
     # Save the plot to a file
     for (file in file_names) {
-      if (str_detect(file, "scatter")) {
+      if (str_detect(file, "CC")) {
         width <- 7
+        height <- 7
+      } else if(str_detect(file, "assay")){
+        width <- 10
         height <- 7
       } else {
         width <- 5
@@ -248,4 +243,7 @@ export_plot_list <- function(plot_list, folder_name) {
 today_date <- Sys.Date()
 formatted_date <- format(today_date, "%Y-%m-%d")
 
+setwd(path)
 export_plot_list(CC_plot_list, paste(formatted_date, "CC_tail_core_coeff", sep = "_"))
+setwd(path)
+export_plot_list(Assay_plot_list, paste(formatted_date, "Assay_tail_core_coeff", sep = "_"))
