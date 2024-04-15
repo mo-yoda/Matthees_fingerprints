@@ -20,18 +20,15 @@ setwd(path)
 # import excel sheets
 # for coefficient plots
 CC_coefficients_df <- as.data.frame(readxl::read_xlsx("FlAsH_core,tail_coefficients.xlsx"))
+assays_coefficients_df <- as.data.frame(readxl::read_xlsx("Assays_core,tail_coefficients.xlsx"))
 # for normalisation explanation
 CC_mean_norm_data <- as.data.frame(readxl::read_xlsx("CC_mean_normalised_data.xlsx"))
 CC_mean_NOTnorm_data <- as.data.frame(readxl::read_xlsx("CC_mean_NOTnormalised_data.xlsx"))
 
 #### create plots from tail-core coeff ####
-# Split data into subsets based on cell_background
-CC_coeff_subsets <- CC_coefficients_df %>%
-  group_by(cell_background) %>%
-  group_split()
-
 # Initialize an empty list to store the resulting plots
 CC_plot_list <- list()
+Assay_plot_list <- list()
 
 create_scatterplot <- function(dataframe, coefficient_col,
                                cell_backgrounds_to_show = c("Con", "dQ+EV", "dQ+GRK2", "dQ+GRK6"),
@@ -41,22 +38,35 @@ create_scatterplot <- function(dataframe, coefficient_col,
   costum_colors <- c(Con = "#000080", `dQ+EV` = "#808080", `dQ+GRK2` = "#F94040", `dQ+GRK6` = "#077E97")
   needed_colors <- costum_colors[as.character(unique(dataframe$cell_background))]
 
-  # use this sequence of FlAsH positions
-  flash_order <- c("FlAsH1", "FlAsH10", "FlAsH9", "FlAsH7", "FlAsH5", "FlAsH4", "FlAsH3", "FlAsH2")
+  if (any(str_detect(names(dataframe), "FlAsH"))) {
+    factor_name <- "FlAsH"
+    # use this sequence of FlAsH positions
+    level_order <- c("FlAsH1", "FlAsH10", "FlAsH9", "FlAsH7", "FlAsH5", "FlAsH4", "FlAsH3", "FlAsH2")
+  } else {
+    factor_name <- "experiment"
+    level_order <- unique(dataframe$experiment)
+  }
 
   # Create a column for controlling visibility based on cell_background
   dataframe$visible <- ifelse(dataframe$cell_background %in% cell_backgrounds_to_show, 1, 0)
 
+  # Add dummy data to control point scaling
+  dummy_data <- dataframe[1:2, , drop = FALSE]  # Copy the first two rows
+  dummy_data$cell_background <- "dummy_cell"
+  dummy_data$wildtype_diff <- c(0, 1)  # Create two rows with wildtype_diff 0 and 1
+  dummy_data$visible <- c(0, 0)
+  dataframe <- rbind(dataframe, dummy_data)  # Bind the dummy data to the original dataframe
+
   scatterplot <- ggplot(dataframe,
                         aes(x = !!sym(coefficient_col),
-                            y = factor(FlAsH, levels = flash_order),
+                            y = factor(.data[[factor_name]], levels = level_order),
                             size = wildtype_diff, # size of points correspond to WT diff
                             color = cell_background)) +
     geom_vline(xintercept = 0)
 
   # make sure that if not all cell_backgrounds are supposed to be displayed,
   # others are made invisble (alpha = 0)
-  if (length(cell_backgrounds_to_show) < 4) {
+  if (length(cell_backgrounds_to_show) < 5) {
     scatterplot <- scatterplot +
       geom_point(aes(alpha = visible)) +
       scale_alpha_continuous(range = c(0, 1))
@@ -93,6 +103,9 @@ create_scatterplot <- function(dataframe, coefficient_col,
   }
   return(scatterplot)
 }
+
+# works now! - write commit + include creation of desired plots
+create_scatterplot(assays_coefficients_df,"tail_core_transferabiility_diff")
 
 # create different options of scatterplots
 CC_plot_list[["all_data_scatter_scaled"]] <-
@@ -235,4 +248,4 @@ export_plot_list <- function(plot_list, folder_name) {
 today_date <- Sys.Date()
 formatted_date <- format(today_date, "%Y-%m-%d")
 
-export_plot_list(CC_plot_list, paste(formatted_date, "CC_tail_core_coeff", sep="_"))
+export_plot_list(CC_plot_list, paste(formatted_date, "CC_tail_core_coeff", sep = "_"))
