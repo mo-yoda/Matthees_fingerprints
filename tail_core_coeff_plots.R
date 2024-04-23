@@ -143,6 +143,9 @@ for (condition in conditions) {
 #### Supplementary Figure for coeff explanation ####
 # Con b2AR F10, 4 and 1 as examples
 
+# Initialize an empty list to store the resulting plots
+Suppl_plot_list <- list()
+
 # function to create subset data for example barplots
 subset_example_data <- function(data, cell_background, FlAsH) {
   subset <- data %>%
@@ -159,31 +162,39 @@ plot_example_bars <- function(data, normalised = TRUE) {
   FlAsH_level <- levels(as.factor(data$FlAsH))
 
   if (length(FlAsH_level) > 1) {
+    # plot fingerprint for one GPCR
+    fingerprint = TRUE
     x_factor <- "FlAsH"
+    level_order <- c("FlAsH2", "FlAsH3", "FlAsH4", "FlAsH5", "FlAsH7", "FlAsH9", "FlAsH10", "FlAsH1")
+    plot_title <- paste(cell_background_level, unique(data$GPCR), sep="_")
   } else {
+    # plot one F position for all GPCRs
+    fingerprint = FALSE
     x_factor <- "GPCR"
+    level_order <- levels(as.factor(data$GPCR))
+    plot_title <- paste(cell_background_level, FlAsH_level, sep = "_")
   }
 
-  # Construct plot title dynamically
-  plot_title <- paste(cell_background_level, FlAsH_level, sep = "_")
+  # Adjust data frame based on the x-factor level ordering
+  data[[x_factor]] <- factor(data[[x_factor]], levels = level_order)
 
   p <- ggplot(data, aes(x = .data[[x_factor]], y = mean_signal)) +
     geom_bar(stat = "identity", position = position_dodge()) + # Use identity stat for pre-summarized data
     theme_classic() +
     theme(plot.title = element_text(size = 20, face = "bold"),  # Increase plot title font size and make it bold
           axis.title = element_text(size = 18),  # Increase axis titles font size
-          axis.text.x = element_text(size = 16),  # Increase x axis text font size
+          axis.text.x = element_text(size = 16, angle = if (fingerprint) 45, hjust =1),  # Increase x axis text font size
           axis.text.y = element_text(size = 16),  # Increase y axis text font size
           legend.title = element_text(size = 16),  # Increase legend title font size
           legend.text = element_text(size = 14)  # Increase legend text font size
     ) +
-    labs(title = plot_title, y = "Mean Signal")
+    labs(title = plot_title, y = "Mean Signal") +
+    geom_hline(yintercept = 0)
   if (normalised) {
     p <- p + coord_cartesian(ylim = c(0, 1))
   } else {
     p <- p +
-      coord_cartesian(ylim = c(-54, 0)) +
-      geom_hline(yintercept = 0)
+      coord_cartesian(ylim = c(-54, 0))
   }
   return(p)
 }
@@ -195,7 +206,7 @@ for (flash in example_flash) {
   temp_plot <- plot_example_bars(temp_subset)
 
   plot_title <- paste("Example_bar", flash, sep = "_")
-  CC_plot_list[[plot_title]] <- temp_plot
+  Suppl_plot_list[[plot_title]] <- temp_plot
 }
 
 #### barplots for normalisation explanation ####
@@ -224,8 +235,8 @@ fingerprint_barplot <- function(data, normalised, plot_list) {
   return(plot_list)
 }
 
-CC_plot_list <- fingerprint_barplot(CC_mean_norm_data, normalised = TRUE, CC_plot_list)
-CC_plot_list <- fingerprint_barplot(CC_mean_NOTnorm_data, normalised = FALSE, CC_plot_list)
+Suppl_plot_list <- fingerprint_barplot(CC_mean_norm_data, normalised = TRUE, Suppl_plot_list)
+Suppl_plot_list <- fingerprint_barplot(CC_mean_NOTnorm_data, normalised = FALSE, Suppl_plot_list)
 
 #### export plots ####
 export_plot_list <- function(plot_list, folder_name) {
@@ -247,6 +258,9 @@ export_plot_list <- function(plot_list, folder_name) {
         # sizing for assay scatter plots
         width <- 10
         height <- 7
+      } else if (str_detect(file, "Example")) {
+        width <- 4
+        height <- 5
       } else {
         # sizing of barcharts
         width <- 5
@@ -270,3 +284,6 @@ export_plot_list(CC_plot_list, paste(formatted_date, "CC_tail_core_coeff", sep =
 # export other assay data plots
 setwd(path)
 export_plot_list(Assay_plot_list, paste(formatted_date, "Assay_tail_core_coeff", sep = "_"))
+# export plots for suppl figure
+setwd(path)
+export_plot_list(Suppl_plot_list, paste(formatted_date, "Coefficient_supplementary", sep = "_"))
