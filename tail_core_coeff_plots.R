@@ -34,14 +34,31 @@ create_scatterplot <- function(dataframe, coefficient_col = "tail_core_transfera
   costum_colors <- c(Con = "#000080", `dQ+EV` = "#808080", `dQ+GRK2` = "#F94040", `dQ+GRK6` = "#077E97")
   needed_colors <- costum_colors[as.character(unique(dataframe$cell_background))]
 
-  if (any(str_detect(names(dataframe), "FlAsH"))) {
-    factor_name <- "FlAsH"
-    # use this sequence of FlAsH positions
-    level_order <- c("FlAsH1", "FlAsH10", "FlAsH9", "FlAsH7", "FlAsH5", "FlAsH4", "FlAsH3", "FlAsH2")
-  } else {
+  # Determine the factor name and its level order dynamically
+  factor_name <- "FlAsH"  # Default to FlAsH if no conditions match
+  level_order <- c("FlAsH1", "FlAsH10", "FlAsH9", "FlAsH7", "FlAsH5", "FlAsH4", "FlAsH3", "FlAsH2")
+
+  if (any(str_detect(names(dataframe), "experiment"))) {
     factor_name <- "experiment"
-    level_order <- unique(dataframe$experiment)
+    full_level_order <- c("internalization-bArr2-vs-Rab",
+                          "internalization-R-vs-Rab(+bArr2)",
+                          "bArr2-recr-bars",
+                          "pERK",
+                          "phosphorylation-dist",
+                          "phosphorylation-prox")
+
+    if (all(cell_backgrounds_to_show %in% c("Con", "dQ+EV"))) {
+      level_order <- full_level_order[!full_level_order %in% c("phosphorylation-prox", "phosphorylation-dist")]
+    } else if (all(cell_backgrounds_to_show %in% c("dQ+GRK2", "dQ+GRK6"))) {
+      level_order <- full_level_order[-which(full_level_order == "pERK")]
+    } else {
+      level_order <- full_level_order
+    }
   }
+
+  # Ensure all levels are represented and create the plot
+  dataframe[[factor_name]] <- factor(dataframe[[factor_name]], levels = level_order)
+  dataframe <- dataframe[!is.na(dataframe[[factor_name]]),]
 
   # Create a column for controlling visibility based on cell_background
   dataframe$visible <- ifelse(dataframe$cell_background %in% cell_backgrounds_to_show, 1, 0)
@@ -99,6 +116,7 @@ create_scatterplot <- function(dataframe, coefficient_col = "tail_core_transfera
   }
   return(scatterplot)
 }
+
 # Initialize an empty list to store the resulting plots
 CC_plot_list <- list()
 Assay_plot_list <- list()
@@ -118,8 +136,8 @@ for (condition in conditions) {
   plot_name_temp <- paste(
     paste(unlist(condition), collapse = "_"),
     "scatter", sep = "_")
-  CC_plot_list[[paste("CC", plot_name_temp, sep="_")]] <- create_scatterplot(CC_coefficients_df, cell_backgrounds_to_show = condition)
-  Assay_plot_list[[paste("assay", plot_name_temp, sep="_")]] <- create_scatterplot(assays_coefficients_df, cell_backgrounds_to_show = condition)
+  CC_plot_list[[paste("CC", plot_name_temp, sep = "_")]] <- create_scatterplot(CC_coefficients_df, cell_backgrounds_to_show = condition)
+  Assay_plot_list[[paste("assay", plot_name_temp, sep = "_")]] <- create_scatterplot(assays_coefficients_df, cell_backgrounds_to_show = condition)
 }
 
 #### Supplementary Figure for coeff explanation ####
@@ -225,7 +243,7 @@ export_plot_list <- function(plot_list, folder_name) {
         # sizing for conformational change sensors
         width <- 7
         height <- 7
-      } else if(str_detect(file, "assay")){
+      } else if (str_detect(file, "assay")) {
         # sizing for assay scatter plots
         width <- 10
         height <- 7
