@@ -140,6 +140,7 @@ process_dataset <- function(data) {
     })
   # Convert list of unsuccessful fit experiments to a data frame
   unsuccessful_fit_df <- data.frame(experiment = unlist(unsuccessful_fit_experiments))
+  print(paste(length(unsuccessful_fit_df$experiment), "experiments were not fitted"))
 
   # Save the list of unsuccessful fit experiments to an Excel file
   write_xlsx(unsuccessful_fit_df, "unsuccessful_fit_experiments.xlsx")
