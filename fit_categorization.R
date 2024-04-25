@@ -278,6 +278,11 @@ create_xy_plot <- function(data, x_col, y_col, factor1 = NULL, factor2 = NULL,
       x = x_label,
       y = y_label
     )
+  # add lines for visualisation of filter range
+  p <- p +
+    geom_vline(xintercept = 10^-3, linetype = "dashed") +
+    geom_vline(xintercept = 10^0.3, linetype = "dashed") +
+    geom_hline(yintercept = 10^-1, linetype = "dashed")
 
   # Return the plot
   return(invisible(p))
