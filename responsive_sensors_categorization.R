@@ -1,4 +1,4 @@
-###create needed environment with loading packages
+#### create needed environment with loading packages ####
 wants <- c("openxlsx",
            "dplyr",
            "writexl"
@@ -7,7 +7,7 @@ has <- wants %in% rownames(installed.packages())
 if (any(!has)) install.packages(wants[!has])
 lapply(wants, require, character.only = TRUE)
 
-### Data processing
+#### Set filter borders ####
 # tower PC path
 path <- r"(C:\Users\monar\Google Drive\Arbeit\homeoffice\231119_EM_PROGRAM_newdata)"
 # laptop path
@@ -35,7 +35,7 @@ add_constraint_column <- function(df, hill_lower, ec50_upper, ec50_lower) {
 modified_data <- add_constraint_column(fit_pars_og, -1, 0.3, -3.0)
 write_xlsx(modified_data, "Fit_parameters_classes_filtered.xlsx")
 
-### Data processing ###
+#### Apply filter ####
 # tower PC path
 path <- r"(C:\Users\monar\Google Drive\Arbeit\homeoffice\231119_EM_PROGRAM_newdata)"
 # laptop path
@@ -68,13 +68,14 @@ set_unmatched_to_zero <- function(data, reference, manual_exclusion, signal_col)
   }
 
   print("---- No. experiments set to 0 (non-responsive) ----")
-  print(length(unmatched_data$experiment)+length(manual_exclusion))
+  print(length(unmatched_data$experiment) + length(manual_exclusion))
   print(paste0(length(manual_exclusion), " were categorized as non-responder manually: "))
   print(manual_exclusion)
 
   return(data)
 }
 
+# prepare data for heatmap
 prepare_matrix_data <- function(unprocessed_data, reference, manual_exclusion) {
   # Filter data for ligand_conc == 1
   subset_data <- unprocessed_data[unprocessed_data$ligand_conc == 1,]

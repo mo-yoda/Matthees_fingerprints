@@ -1,4 +1,4 @@
-###create needed environment with loading packages
+#### create needed environment with loading packages ####
 wants <- c("openxlsx",
            "tidyverse",
            "stringr",
@@ -36,7 +36,7 @@ translate_to_logical <- function(column) {
   )
 }
 
-### Data processing
+#### Data processing ####
 # tower PC path
 path <- r"(C:\Users\monar\Google Drive\Arbeit\homeoffice\231119_EM_PROGRAM_newdata)"
 # laptop path
@@ -81,11 +81,11 @@ merged_data <- merged_data %>%
     critical = translate_to_logical(critical)
   )
 if (!dir.exists("categories")) {
-    dir.create("categories")
-  }
+  dir.create("categories")
+}
 write_xlsx(merged_data, paste0(getwd(), r"(\categories\Fit_parameters_classes.xlsx)"))
 
-### plot parameters based on different factors
+#### plot parameters based on different factors ####
 # function for plotting
 create_boxplot <- function(data, plot_col,
                            factor1, factor2 = NULL,
@@ -148,7 +148,7 @@ data_b2 <- merged_data %>%
 # initialize plot_list
 plot_list <- list()
 
-### Boxplot plotting
+#### Boxplot plotting ####
 # Warning: Removed XX rows containing non-finite values (`stat_boxplot()`)
 # -> due to ylim setting!, there are no NAs or Inf values in this dataset
 
@@ -192,7 +192,7 @@ add_plot(plot_list,
                         ylim_range = c(-5, 3), log_transform = TRUE),
          "concDep_hillSlopeLog_GPCR")
 
-### 2D plotting
+#### 2D plotting ####
 create_xy_plot <- function(data, x_col, y_col, factor1 = NULL, factor2 = NULL,
                            x_range = NULL, y_range = NULL, log_x = FALSE, log_y = FALSE,
                            label_above_y = NULL, label_below_y = NULL,
@@ -293,7 +293,7 @@ create_xy_plot <- function(data, x_col, y_col, factor1 = NULL, factor2 = NULL,
 # trans$transform(limits) : NaNs produced
 # Warning: Removed XX rows containing missing values (`geom_point()`).
 
-### used 2D plots ###
+### used 2D plots
 # add core factor to df
 merged_data <- merged_data %>%
   mutate(core = if_else(str_starts(GPCR, "V2"), "V2", "b2"))

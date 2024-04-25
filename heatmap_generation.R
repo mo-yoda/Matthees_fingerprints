@@ -1,4 +1,4 @@
-### create needed environment with loading packages
+#### create needed environment with loading packages ####
 wants <- c("openxlsx",
            "dplyr",
            "tidyr",
@@ -10,7 +10,7 @@ has <- wants %in% rownames(installed.packages())
 if (any(!has)) install.packages(wants[!has])
 lapply(wants, require, character.only = TRUE)
 
-### Data processing
+#### load data ####
 # tower PC path
 path <- r"(C:\Users\monar\Google Drive\Arbeit\homeoffice\231119_EM_PROGRAM_newdata)"
 # laptop path
@@ -80,7 +80,6 @@ create_matrix_from_factors <- function(data, col_factor,
   matrix_data$combined_factor <- NULL  # Remove the 'combined_factor' column
 
   return(matrix_data)
-
 }
 
 create_colors_and_breaks <- function(matrix_data) {
@@ -92,27 +91,27 @@ create_colors_and_breaks <- function(matrix_data) {
   num_colors_below_zero <- 100
   num_colors_above_zero_to_two <- 100
 
-
-  # Define breaks with very small intervals around 0
+  # workaround for specific coloring of non-responders:
+  # define breaks with very small intervals around 0
   breaks <- c(min_value,
               seq(min_value, -1e-10, length.out = num_colors_below_zero + 1)[-1],
               -1e-10, 1e-10,  # Small interval around 0
               seq(1e-10, 2, length.out = num_colors_above_zero_to_two + 1)[-1],
               max_value)
   breaks <- unique(breaks)  # Ensure breaks are unique
-  print(breaks)
 
   # Define colors
-  colors_below_zero <- colorRampPalette(c("#FF0000","#0000FF"))(num_colors_below_zero) # Gradient for < 0
-  colors_above_zero_to_two <- colorRampPalette(c("#FFFFFF", "#CAFFCA"))(num_colors_above_zero_to_two) # Gradient for 0 < x <= 2
-  nonResponderColor <- "#A6A4A4" # Color for the very small interval around 0
-  colors_above_two <- "#CAFFCA" # Color for x > 2
+  # Gradient for < 0
+  colors_below_zero <- colorRampPalette(c("#FF0000", "#0000FF"))(num_colors_below_zero)
+  # Gradient for 0 < x <= 2
+  colors_above_zero_to_two <- colorRampPalette(c("#FFFFFF", "#CAFFCA"))(num_colors_above_zero_to_two)
+  # Color for non-responder
+  nonResponderColor <- "#A6A4A4"
+  # Color for x > 2
+  colors_above_two <- "#CAFFCA"
 
   # Assemble the color vector
   colors <- c(colors_below_zero, nonResponderColor, colors_above_zero_to_two, colors_above_two)
-  print(breaks)
-  print(length(breaks))
-  print(length(colors))
 
   # Return the colors and breaks
   return(list(colors = colors, breaks = breaks))
@@ -223,7 +222,6 @@ collect_heatmaps <- function(plot_list, data, col_factor,
 
   # Add the heatmap to the existing plot list
   plot_list <- add_plot(plot_list, heatmap_plot, plot_name)
-  print(names(plot_list))
 
   return(plot_list)
 }
@@ -236,7 +234,7 @@ flash_matrix <- create_matrix_from_factors(filtered_data,
 flash_matrix <- cbind("Factors" = rownames(flash_matrix), flash_matrix)
 write_xlsx(flash_matrix, "Matrix_SN.xlsx")
 
-### 240124 ###
+#### create heatmaps ####
 # initialize plot_list
 figure_plot_list <- list()
 
@@ -255,7 +253,7 @@ for (level in GRK_conditions[3:4]) {
                                        height = 20, width = 20)
 }
 
-### export plots
+# export plots
 export_plot_list <- function(plot_list, folder_name) {
   if (!dir.exists(folder_name)) {
     dir.create(folder_name)
@@ -266,11 +264,11 @@ export_plot_list <- function(plot_list, folder_name) {
     file_names <- c(paste0(i, "_", names(plot_list)[i], ".png"),
                     paste0(i, "_", names(plot_list)[i], ".emf"))
     # Save the plot to a file
-    for (file in file_names){
-          ggsave(file, plot = plot_list[[i]],
-           # width = 10,
-           # height = 7
-          )
+    for (file in file_names) {
+      ggsave(file, plot = plot_list[[i]],
+             # width = 10,
+             # height = 7
+      )
     }
   }
 }

@@ -1,4 +1,4 @@
-### create needed environment with loading packages
+#### create needed environment with loading packages ####
 wants <- c("openxlsx",
            "drc", # needed for fit
            "dplyr",
@@ -11,7 +11,7 @@ has <- wants %in% rownames(installed.packages())
 if (any(!has)) install.packages(wants[!has])
 lapply(wants, require, character.only = TRUE)
 
-### Functions to create all fit plots
+#### Functions to create all fit plots ####
 # Function to fit the data
 fit_data <- function(curr_data) {
   # Try fitting the curve and catch errors
@@ -149,7 +149,7 @@ process_dataset <- function(data) {
   return(fit_pars)
 }
 
-### Data processing
+#### Data processing ####
 # tower PC path
 path <- r"(C:\Users\monar\Google Drive\Arbeit\homeoffice\231119_EM_PROGRAM_newdata)"
 # laptop path
@@ -162,8 +162,8 @@ data <- readxl::read_xlsx(import_file)
 
 # create folders for start normalised
 if (!dir.exists("start_normalised")) {
-    dir.create("start_normalised")
-  }
+  dir.create("start_normalised")
+}
 setwd(paste0(getwd(), "/start_normalised"))
 
 # Call the main function
