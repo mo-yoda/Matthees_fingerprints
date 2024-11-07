@@ -1,5 +1,5 @@
 # Matthees et al.
-## title tba 
+## Relating GPCR domains with functionality: receptor helix-bundle and C-terminus differentially influence GRK-specific functions and β-arrestin-mediated regulation
 
 ---
 This 
@@ -7,7 +7,7 @@ code was written and used for analysis and visualisation of data contained in Ma
 ---
 
 ### Classification of responding and non-responding β-arrestin conformational change sensors ###
-A flowchart describing this process can be found in **Suppl. Figure X**. 
+A flowchart describing this process can be found in **Suppl. Figure 2**. 
 The donut plot in this figure was created 
 [**in donut_plot.R**](https://github.com/mo-yoda/Matthees_fingerprints/blob/master/donut_plot.R).
 
@@ -34,7 +34,7 @@ For visualisation of the β-arrestin fingerprints, heatmaps were created in
 ---
 
 ### Quantification of tail- and core-transferability ###
-A flowchart describing this process can be found in **Suppl. Figure X**.
+A flowchart describing this process can be found in **Suppl. Figure 10**.
 
 Tail- and core-transferability coefficient was calculated in 
 [**coefficient_calculation.R**](https://github.com/mo-yoda/Matthees_fingerprints/blob/master/coefficient_calculation.R)
