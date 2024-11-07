@@ -4,8 +4,10 @@
 ---
 This 
 code was written and used for analysis and visualisation of data contained in Matthees et al.
----
 
+
+
+---
 ### Classification of responding and non-responding β-arrestin conformational change sensors ###
 A flowchart describing this process can be found in **Suppl. Figure 2**. 
 The donut plot in this figure was created 
