@@ -37,9 +37,9 @@ write_xlsx(modified_data, "Fit_parameters_classes_filtered.xlsx")
 
 #### Apply filter ####
 # tower PC path
-path <- r"(C:\Users\monar\Google Drive\Arbeit\homeoffice\231119_EM_PROGRAM_newdata)"
+path <- r"(C:\path\to\folder)"
 # laptop path
-path <- r"(C:\Users\marli\Desktop\231119_EM_PROGRAM_newdata)"
+path <- r"(C:\path\to\folder)"
 setwd(path)
 
 # Load data
