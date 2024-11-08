@@ -1,5 +1,5 @@
-# Matthees et al.
-## Relating GPCR domains with functionality: receptor helix-bundle and C-terminus differentially influence GRK-specific functions and β-arrestin-mediated regulation
+# Relating GPCR domains with functionality: receptor helix-bundle and C-terminus differentially influence GRK-specific functions and β-arrestin-mediated regulation
+## Matthees and Haider et al.
 
 ---
 This 
@@ -44,4 +44,4 @@ and bubble plots illustrating the results were created in
 
 --- 
 
-To run code on your PC make sure that Python 3.1 as well as R 4.2.2. is installed. Download [**conformational change data**](https://github.com/mo-yoda/Matthees_fingerprints/blob/master/bArrs_confChange.xlsx) and change path_to_folder variable to path of downloaded data before excuting code.
+To run code on your PC make sure that Python 3.1 as well as R 4.2.2. is installed. Download [**conformational change data**](https://github.com/mo-yoda/Matthees_fingerprints/blob/master/bArrs_confChange.xlsx) and change 'path' variable to path of downloaded data before excuting code.
