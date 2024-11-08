@@ -3,9 +3,8 @@
 
 ---
 This 
-code was written and used for analysis and visualisation of data contained in Matthees et al.
-
-
+code was written and used for analysis and visualisation of data contained in [**Matthees et al**](https://doi.org/10.1101/2024.09.30.615794).
+All code was written and run in Python 3.1 as well as R 4.2.2. 
 
 ---
 ### Classification of responding and non-responding β-arrestin conformational change sensors ###
@@ -14,7 +13,7 @@ The donut plot in this figure was created
 [**in donut_plot.R**](https://github.com/mo-yoda/Matthees_fingerprints/blob/master/donut_plot.R).
 
 Conformational change data was acquired in a concentration-dependent manner as described in Matthees et al.
-Data was formated and normalised to signal measured in the lowest ligand concentration for further processing
+Data was formatted and normalised to signal measured in the lowest ligand concentration for further processing
 in 
 [**data_format.py**](https://github.com/mo-yoda/Matthees_fingerprints/blob/master/data_format.py).
 
@@ -42,3 +41,7 @@ Tail- and core-transferability coefficient was calculated in
 [**coefficient_calculation.R**](https://github.com/mo-yoda/Matthees_fingerprints/blob/master/coefficient_calculation.R)
 and bubble plots illustrating the results were created in 
 [**tail_core_coeff_plots.R**](https://github.com/mo-yoda/Matthees_fingerprints/blob/master/tail_core_coeff_plots.R).
+
+--- 
+
+To run code on your PC make sure that Python 3.1 as well as R 4.2.2. is installed. Download [**conformational change data**](https://github.com/mo-yoda/Matthees_fingerprints/blob/master/bArrs_confChange.xlsx) and change path_to_folder variable to path of downloaded data before excuting code.
