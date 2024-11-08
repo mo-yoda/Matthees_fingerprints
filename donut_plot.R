@@ -31,9 +31,9 @@ pie <- PieDonut(filter_stats, aes(classification, reason, count = freq),
 #          ratioByGroup = TRUE, explode = 4, r0 = 0.45, r1 = 0.9)
 
 # tower PC path
-path <- r"(C:\Users\monar\Google Drive\Arbeit\homeoffice\231119_EM_PROGRAM_newdata)"
+path <- r"(C:\path\to\folder)"
 # laptop path
-path <- r"(C:\Users\marli\Desktop\231119_EM_PROGRAM_newdata)"
+path <- r"(C:\path\to\folder)"
 setwd(path)
 
 # prepare to save plot
