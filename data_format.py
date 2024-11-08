@@ -86,9 +86,9 @@ def dic_to_table(dic):
 
 # Path definition
 # tower PC path
-path_to_file = "C:/Users/monar/Google Drive/Arbeit/homeoffice/231119_EM_PROGRAM_newdata/"
+path_to_file = "C:/path/to/folder/"
 # laptop path
-# path_to_file = "C:/Users/marli/Desktop/231119_EM_PROGRAM_newdata/"
+# path_to_file = "C:/path/to/folder/"
 
 # Read the entire Excel workbook
 all_data = pd.read_excel(f"{path_to_file}/231129_overview_b2,b2V2,V2b2,V2_bArrs-confChange_prepR.xlsx",
