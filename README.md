@@ -4,7 +4,7 @@
 ---
 This 
 code was written and used for analysis and visualisation of data contained in [**Matthees et al**](https://doi.org/10.1101/2024.09.30.615794).
-All code was written and run in Python 3.1 as well as R 4.2.2. 
+All code was written and run in Python 3.10 as well as R 4.2.2. 
 
 ---
 ### Classification of responding and non-responding β-arrestin conformational change sensors ###
@@ -44,4 +44,4 @@ and bubble plots illustrating the results were created in
 
 --- 
 
-To run code on your PC make sure that Python 3.1 as well as R 4.2.2. is installed. Download [**conformational change data**](https://github.com/mo-yoda/Matthees_fingerprints/blob/master/bArrs_confChange.xlsx) and change 'path' variable to path of downloaded data before excuting code.
+To run code on your PC make sure that Python 3.10 as well as R 4.2.2. is installed. Download [**conformational change data**](https://github.com/mo-yoda/Matthees_fingerprints/blob/master/bArrs_confChange.xlsx) and change 'path' variable to path of downloaded data before excuting code.
