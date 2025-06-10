@@ -2,8 +2,8 @@
 ## Matthees and Haider et al.
 
 ---
-This 
-code was written and used for analysis and visualisation of data contained in [**Matthees et al**](https://doi.org/10.1101/2024.09.30.615794).
+This code [**v1.0-Matthees2025**](https://github.com/mo-yoda/Matthees_fingerprints/releases/tag/v1.0-Matthees2025)
+ was written and used for analysis and visualisation of data contained in [**Matthees et al**](https://doi.org/10.1101/2024.09.30.615794).
 All code was written and run in Python 3.10 as well as R 4.2.2. 
 
 ---
